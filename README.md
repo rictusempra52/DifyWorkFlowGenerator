@@ -24,13 +24,17 @@
 
 ## 使用方法
 
-1. ワークフロー生成プロンプトをDifyにインポートしてください。
+1. git cloneしてください。
+```
+https://github.com/Tomatio13/DifyWorkFlowGenerator.git
+```
+2. ワークフロー生成プロンプトdify_chatbot/DifyWorkflowGeneate.ymlをDifyにインポートしてください。
 インポートすると以下のような画面になります。
 ![Dify ワークフロージェネレーター](./images/DifyWorkflowGenerator_initial.jpg)
 
 *注意事項*: このプロントは、gpt-4oではなく、claude-3-5-sonnetで実行してください。gpt-4oでは、ワークフローが正しく生成されません。
 
-2. 必要な情報を準備：
+3. 必要な情報を準備：
    - ワークフローの目的
    - 知識獲得の制御ブロックを利用する場合、ナレッジのdataset_idsを調べて下さい。
         - 調べ方
@@ -45,11 +49,11 @@
             ```
             上記にようにdataset_idsが記述されているのでメモしておいて下さい。
 
-3. 以下の画像のようにプロンプトを作成して実行して下さい。
+4. 以下の画像のようにプロンプトを作成して実行して下さい。
 ![Dify ワークフロージェネレーター](./images/DifyWorkflowGenerator.jpg)
 図のようにDifyにインポート可能なYAMLファイルが生成されます。
-4. 生成されたYAMLを別ファイルに貼り付けて、Difyにインポートして下さい。
-5. 以下は、example/manual_search.ymlをインポートした画面です。
+5. 生成されたYAMLを別ファイルに貼り付けて、Difyにインポートして下さい。
+6. 以下は、example/manual_search.ymlをインポートした画面です。
 ![Dify ワークフロージェネレーター](./images/manual_search.jpg)
 
 ## サポートされるノードタイプ
