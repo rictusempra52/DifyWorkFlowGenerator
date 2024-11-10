@@ -1,0 +1,263 @@
+app:
+  description: Difyのワークフローを生成するプロンプトです。
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: chat
+  name: Difyワークフロー生成プロンプト
+  use_icon_as_answer_icon: false
+kind: app
+model_config:
+  agent_mode:
+    enabled: false
+    max_iteration: 5
+    strategy: function_call
+    tools: []
+  annotation_reply:
+    enabled: false
+  chat_prompt_config: {}
+  completion_prompt_config: {}
+  dataset_configs:
+    datasets:
+      datasets: []
+    reranking_enable: true
+    retrieval_model: multiple
+    top_k: 4
+  dataset_query_variable: ''
+  external_data_tools: []
+  file_upload:
+    allowed_file_extensions:
+    - .JPG
+    - .JPEG
+    - .PNG
+    - .GIF
+    - .WEBP
+    - .SVG
+    allowed_file_types:
+    - image
+    allowed_file_upload_methods:
+    - remote_url
+    - local_file
+    enabled: false
+    image:
+      detail: high
+      enabled: false
+      number_limits: 3
+      transfer_methods:
+      - remote_url
+      - local_file
+    number_limits: 3
+  model:
+    completion_params:
+      stop: []
+    mode: chat
+    name: claude-3-5-sonnet-20241022
+    provider: anthropic
+  more_like_this:
+    enabled: false
+  opening_statement: ''
+  pre_prompt: "prompt:\n  metadata:\n    title: Difyワークフロー生成プロンプト\n    version: 1.0.0\n\
+    \    description: Difyのワークフローファイルを生成するためのプロンプト定義\n\n\n  input_requirements: |\n\
+    \    以下の情報を提供してください：\n    1. ワークフローの目的（例：本の要約生成、商品説明文作成など）\n    2. 入力として必要な情報（例：本のタイトル、商品名と特徴など）\n\
+    \    3. 出力として期待する形式や内容\n    4. 特別な制約条件（文字数制限、トーンの指定など）\n\n\n  instructions:\n\
+    \    workflow_overview: |\n      提供された要件に基づいて、以下の要素を含むDifyワークフローファイル（YAML形式）を生成します：\n\
+    \      - 3つのノード（開始、LLM、終了）で構成される単純なワークフロー\n      - ノード間は順次実行されるよう接続\n      - 入力から出力までの一連の処理を自動化\n\
+    \n\n    required_structure:\n      app_info:\n        - mode: workflowを指定\n  \
+    \      - name: 目的を表す名前を設定\n        - version: 0.1.3を使用\n\n\n      workflow_graph:\n\
+    \        edges:\n          - source: 開始ノードのID（例：'1731228343114'）\n           \
+    \ target: LLMノードのID（例：'1731229438627'）\n            data:\n              sourceType:\
+    \ start\n              targetType: llm\n          - source: LLMノードのID（例：'1731229438627'）\n\
+    \            target: 終了ノードのID（例：'1731228345560'）\n            data:\n        \
+    \      sourceType: llm\n              targetType: end\n          - source: 質問分類器ノードのID\n\
+    \            sourceHandle: '1'  # 質問分類1用\n            target: ターゲットノードID1\n  \
+    \          targetHandle: target\n            data:\n              sourceType:\
+    \ question-classifier\n              targetType: [ターゲットノードタイプ]\n          - source:\
+    \ 質問分類器ノードのID\n            sourceHandle: '2'  # 質問分類2用\n            target: ターゲットノードID2\n\
+    \            targetHandle: target\n            data:\n              sourceType:\
+    \ question-classifier\n              targetType: [ターゲットノードタイプ]\n        \n   \
+    \     nodes:\n          start_node:\n            - id: ユニークなID\n            -\
+    \ type: start\n            - variables: #入力フィールドの定義\n              - type: text-input\n\
+    \              - variable: 変数名\n              - label: 表示ラベル\n              -\
+    \ required: true/false\n              - max_length: 最大文字数\n\n\n          llm_node:\n\
+    \            - id: ユニークなID\n            - type: llm\n            - model:\n  \
+    \            - provider: openai\n              - name: gpt-4o\n              -\
+    \ mode: chat\n              - completion_params:\n                - temperature:\
+    \ 生成時の温度設定\n            - prompt_template:\n              - role: system\n   \
+    \           - text: シングルコートで括ったプロンプトテキスト\n            - context:\n           \
+    \   - enabled: true\n              - variable_selector: 使用する変数の指定\n\n\n      \
+    \    end_node:\n            - id: ユニークなID\n            - type: end\n         \
+    \   - outputs: #出力変数の定義\n              - input_data: 入力データ\n              - generated_text:\
+    \ 生成されたテキスト\n\n\n          http_request_node:\n            - id: ユニークなID\n   \
+    \         - type: http-request\n            - data:\n              - authorization:\n\
+    \                  config: null\n                  type: no-auth/basic/bearer\
+    \  # 認証タイプを指定\n              - body:\n                  type: json/form-data/x-www-form-urlencoded\n\
+    \                  data:  # JSONの場合の例\n                    - id: [キーバリューID]\n\
+    \                      key: [キー名]\n                      type: text\n        \
+    \              value: [JSON形式の値]\n              - headers: Content-Type:[content-type]\
+    \  # 例：application/json\n              - method: get/post/put/delete\n       \
+    \       - url: [APIエンドポイントURL]\n              - timeout:\n                  max_connect_timeout:\
+    \ [接続タイムアウト秒数]\n                  max_read_timeout: [読み取りタイムアウト秒数]\n         \
+    \         max_write_timeout: [書き込みタイムアウト秒数]\n              - title: HTTPリクエスト\n\
+    \              - variables: []  # 必要に応じて変数を定義\n\n\n          json_parse_node:\n\
+    \            - id: ユニークなID\n            - type: tool\n            - data:\n  \
+    \            - provider_id: json_process\n              - provider_name: json_process\n\
+    \              - provider_type: builtin\n              - title: JSON Parse\n \
+    \             - tool_configurations:\n                  ensure_ascii: 1\n    \
+    \          - tool_name: parse\n              - tool_parameters:\n            \
+    \      content:\n                    type: mixed\n                    value: '{{#[入力ノードID].[変数名]#}}'\n\
+    \                  json_filter:\n                    type: mixed\n           \
+    \         value: [抽出したいJSONキー]\n\n\n          question_classifier_node:\n    \
+    \        - id: ユニークなID\n            - type: question-classifier\n            -\
+    \ data:\n              - title: 質問分類器\n              - model:\n              \
+    \    provider: openai\n                  name: gpt-4o\n                  mode:\
+    \ chat\n                  completion_params:\n                    temperature:\
+    \ 0.7\n              - query_variable_selector:\n                  - [入力ノードID]\n\
+    \                  - [変数名]\n              - classes:\n                  - id:\
+    \ [クラスID]\n                    name: [分類名]\n\n\n          knowledge_retrieval_node:\n\
+    \            - id: ユニークなID\n            - type: knowledge-retrieval\n        \
+    \    - data:\n              - title: 知識取得\n              - dataset_ids:\n    \
+    \              - [データセットID]\n              - retrieval_mode: multiple\n      \
+    \        - multiple_retrieval_config:\n                  reranking_enable: true\n\
+    \                  reranking_mode: weighted_score\n                  top_k: 4\n\
+    \                  weights:\n                    vector_setting:\n           \
+    \           embedding_model_name: text-embedding-3-large\n                   \
+    \   embedding_provider_name: openai\n                      vector_weight: 1\n\
+    \                    keyword_setting:\n                      keyword_weight: 0\n\
+    \              - query_variable_selector:\n                  - [入力ノードID]\n   \
+    \               - [変数名]\n\n\n    usage_guide: |\n      ワークフローの使用方法：\n      1.\
+    \ 開始ノード\n         - ユーザーからの入力を受け付ける\n         - 入力された情報は変数として保存\n\n\n      2.\
+    \ LLMノード\n         - OpenAIのgpt-4oモデルを使用（他のモデルは使用不可）\n         - システムロールのプロンプトのみ使用可能（userロールは使用不可）\n\
+    \         - プロンプトテキストは必ずシングルコートで括る\n         例：text: '{{#1731228343114.Query#}}の質問に答えて下さい。'\n\
+    \         - 保存された変数を使用してプロンプトを構成\n         - 結果をテキストとして出力\n\n\n      3. 終了ノード\n\
+    \         - 入力データと生成されたテキストを保存\n         - 必要に応じて後続の処理やAPIで使用可能\n\n\n      4.\
+    \ HTTPリクエストノード\n         - 外部APIとの連携に使用\n         - リクエストボディはJSON形式で記述\n     \
+    \    - 変数の参照は {{#[ノードID].[変数名]#}} の形式で指定\n         - タイムアウトは必要に応じて設定（0は無制限）\n\
+    \         - ヘッダーは「キー:値」の形式で指定\n\n\n      5. JSON Parseノード\n         - JSONデータの解析と特定のキーの抽出に使用\n\
+    \         - content: パースするJSON文字列（変数参照可能）\n         - json_filter: 抽出したいJSONのキー\n\
+    \         - ensure_ascii: 1（ASCII文字のみ）または0（Unicode対応）\n         - 他のノードの出力をJSONとして解析する場合に使用\n\
+    \n\n      6. 質問分類器ノード\n         - OpenAIのgpt-4oモデルを使用（他のモデルは使用不可）\n         -\
+    \ 入力された質問を事前定義されたクラスに分類\n         - クラスは複数定義可能\n         - 分類結果に基づいて異なるフローへ分岐可能\n\
+    \         分岐パターン例：\n         パターン1（共通LLM使用）:\n         - クラス1の質問 → 知識取得1 → 共通LLM\
+    \ → 終了\n         - クラス2の質問 → 知識取得2 → 共通LLM → 終了\n         - その他の質問 → 直接終了ノードへ\n\
+    \         \n         パターン2（個別LLM使用）:\n         - クラス1の質問 → 知識取得1 → LLM1 → 終了1\n\
+    \         - クラス2の質問 → 知識取得2 → LLM2 → 終了2\n         - その他の質問 → 直接終了ノードへ\n\n\n \
+    \     7. 知識取得ノード\n         - 指定されたデータセットから関連情報を検索\n         - ベクトル検索と重み付けスコアによるランキングが可能\n\
+    \         - top_kで取得する結果数を制御\n         - embedding_model_nameとvector_weightで検索精度を調整可能\n\
+    \n\n      8. 質問分類器ノード\n         - 入力された質問を事前定義されたクラスに分類\n         - OpenAIのモデルを使用して分類を実行\n\
+    \         - クラスは複数定義可能\n         - 分類結果に基づいて異なるフローへ分岐可能\n         分岐パターン例：\n \
+    \        パターン1（共通LLM使用）:\n         - クラス1の質問 → 知識取得1 → 共通LLM → 終了\n         -\
+    \ クラス2の質問 → 知識取得2 → 共通LLM → 終了\n         - その他の質問 → 直接終了ノードへ\n         \n    \
+    \     パターン2（個別LLM使用）:\n         - クラス1の質問 → 知識取得1 → LLM1 → 終了1\n         - クラス2の質問\
+    \ → 知識取得2 → LLM2 → 終了2\n         - その他の質問 → 直接終了ノードへ\n\n\n      9. 質問分類器ノード\n\
+    \         - エッジ接続時の重要な設定：\n           - sourceHandle: 質問分類のIDに対応（'1', '2'など）\n\
+    \           - targetHandle: 'target'を指定\n           - これにより、各分類結果応じた適切なフローへの分岐が可能\n\
+    \n\n    output_format: |\n      生成されるYAMLファイルは以下の形式に従ってください：\n      ```yaml\n\
+    \      app:\n        mode: workflow\n        name: [ワークフロー名]\n        version:\
+    \ 0.1.3\n\n\n      workflow:\n        graph:\n          edges:\n            #\
+    \ パターン1の例（共通LLM）\n            - source: [開始ノードID]\n              target: [質問分類器ノードID]\n\
+    \              data:\n                sourceType: start\n                targetType:\
+    \ question-classifier\n            - source: [質問分類器ノードID]\n              sourceHandle:\
+    \ '1'  # 質問分類1用\n              target: [知識取得ノード1ID]\n              targetHandle:\
+    \ target\n              data:\n                sourceType: question-classifier\n\
+    \                targetType: knowledge-retrieval\n            - source: [質問分類器ノードID]\n\
+    \              sourceHandle: '2'  # 質問分類2用\n              target: [知識取得ノード2ID]\n\
+    \              targetHandle: target\n              data:\n                sourceType:\
+    \ question-classifier\n                targetType: knowledge-retrieval\n     \
+    \       - source: [知識取得ノード1ID]\n              target: [共通LLMノードID]\n         \
+    \     data:\n                sourceType: knowledge-retrieval\n               \
+    \ targetType: llm\n            - source: [知識取得ノード2ID]\n              target: [共通LLMノードID]\n\
+    \              data:\n                sourceType: knowledge-retrieval\n      \
+    \          targetType: llm\n            - source: [共通LLMノードID]\n             \
+    \ target: [終了ノードID]\n              data:\n                sourceType: llm\n  \
+    \              targetType: end\n            - source: [質問分類器ノードID]\n         \
+    \     target: [その他用終了ノードID]\n              data:\n                sourceType:\
+    \ question-classifier\n                targetType: end\n\n\n            # パターン2の例（個別LLM）\n\
+    \            - source: [質問分類器ノードID]\n              sourceHandle: '1'  # 質問分類1用\n\
+    \              target: [知識取得ノード1ID]\n              targetHandle: target\n    \
+    \          data:\n                sourceType: question-classifier\n          \
+    \      targetType: knowledge-retrieval\n            - source: [質問分類器ノードID]\n \
+    \             sourceHandle: '2'  # 質問分類2用\n              target: [知識取得ノード2ID]\n\
+    \              targetHandle: target\n              data:\n                sourceType:\
+    \ question-classifier\n                targetType: knowledge-retrieval\n     \
+    \       - source: [知識取得ノード1ID]\n              target: [LLMノード1ID]\n          \
+    \    data:\n                sourceType: knowledge-retrieval\n                targetType:\
+    \ llm\n            - source: [知識取得ノード2ID]\n              target: [LLMノード2ID]\n\
+    \              data:\n                sourceType: knowledge-retrieval\n      \
+    \          targetType: llm\n            - source: [LLMノード1ID]\n              target:\
+    \ [終了ノード1ID]\n              data:\n                sourceType: llm\n         \
+    \       targetType: end\n            - source: [LLMノード2ID]\n              target:\
+    \ [終了ノード2ID]\n              data:\n                sourceType: llm\n         \
+    \       targetType: end\n          nodes:\n            - id: [開始ノードID]\n     \
+    \         data:\n                type: start\n                title: 開始\n    \
+    \            variables:\n                  - type: text-input\n              \
+    \      variable: [変数名]\n                    label: [入力フィールドのラベル]\n           \
+    \         required: true\n                    max_length: [最大文字数]\n\n\n      \
+    \      - id: [LLMノードID]\n              data:\n                type: llm\n    \
+    \            title: LLM\n                model:\n                  provider: openai\n\
+    \                  name: gpt-4o\n                  mode: chat\n              \
+    \    completion_params:\n                    temperature: 0.7\n              \
+    \  prompt_template:\n                  - role: system\n                    id:\
+    \ [プロンプトID]\n                    text: '[プロンプトテキスト]'\n                context:\n\
+    \                  enabled: true\n                  variable_selector:\n     \
+    \               - [開始ノードID]\n                    - [変数名]\n\n\n            - id:\
+    \ [終了ノードID]\n              data:\n                type: end\n                title:\
+    \ 終了\n                outputs:\n                  - value_selector:\n        \
+    \              - [開始ノードID]\n                      - [変数名]\n                  \
+    \  variable: inputData\n                  - value_selector:\n                \
+    \      - [LLMノードID]\n                      - text\n                    variable:\
+    \ generatedText\n\n\n            - id: [HTTPリクエストノードID]\n              data:\n\
+    \                type: http-request\n                authorization:\n        \
+    \          config: null\n                  type: no-auth  # または必要な認証タイプ\n    \
+    \            body:\n                  type: json\n                  data:\n  \
+    \                  - id: [キーバリューID]\n                      key: ''\n         \
+    \             type: text\n                      value: |\n                   \
+    \     {\n                          \"key1\": \"{{#[開始ノードID].[変数名]#}}\",\n    \
+    \                      \"key2\": \"値2\"\n                        }\n         \
+    \       headers: Content-Type:application/json\n                method: post\n\
+    \                url: [APIエンドポイントURL]\n                timeout:\n            \
+    \      max_connect_timeout: 0\n                  max_read_timeout: 0\n       \
+    \           max_write_timeout: 0\n                title: HTTPリクエスト\n         \
+    \       variables: []\n\n\n            - id: [JSONパースノードID]\n              data:\n\
+    \                type: tool\n                desc: ''\n                provider_id:\
+    \ json_process\n                provider_name: json_process\n                provider_type:\
+    \ builtin\n                selected: false\n                title: JSON Parse\n\
+    \                tool_configurations:\n                  ensure_ascii: 1\n   \
+    \             tool_label: JSON Parse\n                tool_name: parse\n     \
+    \           tool_parameters:\n                  content:\n                   \
+    \ type: mixed\n                    value: '{{#[入力ノードID].[変数名]#}}'\n          \
+    \        json_filter:\n                    type: mixed\n                    value:\
+    \ [抽出したいJSONキー]\n\n\n            - id: [質問分類器ノードID]\n              data:\n   \
+    \             type: question-classifier\n                title: 質問分類器\n      \
+    \          model:\n                  provider: openai\n                  name:\
+    \ gpt-4o\n                  mode: chat\n                  completion_params:\n\
+    \                    temperature: 0.7\n                query_variable_selector:\n\
+    \                  - [入力ノードID]\n                  - [変数名]\n                classes:\n\
+    \                  - id: '1'\n                    name: [分類名1]\n             \
+    \     - id: '2'\n                    name: [分類名2]\n\n\n            - id: [知識取得ノードID]\n\
+    \              data:\n                type: knowledge-retrieval\n            \
+    \    title: 知識取得\n                dataset_ids:\n                  - [データセットID]\n\
+    \                retrieval_mode: multiple\n                multiple_retrieval_config:\n\
+    \                  reranking_enable: true\n                  reranking_mode: weighted_score\n\
+    \                  top_k: 4\n                  weights:\n                    vector_setting:\n\
+    \                      embedding_model_name: text-embedding-3-large\n        \
+    \              embedding_provider_name: openai\n                      vector_weight:\
+    \ 1\n                    keyword_setting:\n                      keyword_weight:\
+    \ 0\n                query_variable_selector:\n                  - [入力ノードID]\n\
+    \                  - [変数名]\n      ```"
+  prompt_type: simple
+  retriever_resource:
+    enabled: true
+  sensitive_word_avoidance:
+    configs: []
+    enabled: false
+    type: ''
+  speech_to_text:
+    enabled: false
+  suggested_questions: []
+  suggested_questions_after_answer:
+    enabled: false
+  text_to_speech:
+    enabled: false
+    language: ''
+    voice: ''
+  user_input_form: []
+version: 0.1.3
