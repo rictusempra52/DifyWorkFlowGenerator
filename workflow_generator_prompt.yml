@@ -50,7 +50,19 @@ prompt:
             data:
               sourceType: question-classifier
               targetType: [ターゲットノードタイプ]
-        
+          - source: [IF/ELSEノードID]
+            target: [ターゲットノードID]
+            data:
+              sourceType: if-else
+              targetType: [ターゲットノードタイプ]
+            sourceHandle: 'true'  # IF条件成立時
+          - source: [IF/ELSEノードID]
+            target: [別のターゲットノードID]
+            data:
+              sourceType: if-else
+              targetType: [ターゲットノードタイプ]
+            sourceHandle: 'false'  # ELSE条件時
+
         nodes:
           start_node:
             - id: ユニークなID
@@ -169,6 +181,36 @@ prompt:
                   - [入力ノードID]
                   - [変数名]
 
+          code_node:
+            - id: ユニークなID
+            - type: code
+            - data:
+              - code_language: python3
+              - code: |
+                  # Pythonコードを記述
+              - title: Pythonコード実行
+              - variables: []  # 必要に応じて変数を定義
+
+          if_else_node:
+            - id: ユニークなID
+            - type: if-else
+            - data:
+              - cases:
+                - case_id: 'true'  # IF条件用
+                  conditions:
+                    - comparison_operator: contains/not_contains/starts_with/ends_with/is/is_not/is_empty/is_not_empty
+                      value: 条件値
+                      variable_selector:
+                        - [入力ノードID]
+                        - [変数名]
+                - case_id: [ELIF条件用のユニークID]  # ELIF条件用
+                  conditions:
+                    - comparison_operator: [比較演算子]
+                      value: [条件値]
+                      variable_selector:
+                        - [入力ノードID]
+                        - [変数名]
+
     usage_guide: |
       ワークフローの使用方法：
       1. 開始ノード
@@ -193,6 +235,32 @@ prompt:
          - 変数の参照は {{#[ノードID].[変数名]#}} の形式で指定
          - タイムアウトは必要に応じて設定（0は無制限）
          - ヘッダーは「キー:値」の形式で指定
+
+         サポートされているHTTPメソッド：
+         - GET: リソースの取得
+           - サーバーからデータを取得
+           - クエリパラメータを使用して検索条件を指定可能
+         
+         - POST: データの送信
+           - フォームデータの送信
+           - ファイルのアップロード
+           - 新規リソースの作成
+         
+         - HEAD: ヘッダー情報の取得
+           - GETと同様だがレスポンスボディなし
+           - ヘッダー情報のみを取得
+         
+         - PATCH: 部分的な更新
+           - リクエスト-レスポンスチェーンの経路取得
+           - リソースの一部を更新
+         
+         - PUT: リソースの更新/作成
+           - 既存リソースの更新
+           - 新規リソースの作成
+           - 完全な置き換え
+         
+         - DELETE: リソースの削除
+           - 指定されたリソースの削除をリクエスト
 
       5. JSON Parseノード
          - JSONデータの解析と特定のキーの抽出に使用
@@ -244,6 +312,63 @@ prompt:
            - sourceHandle: 質問分類のIDに対応（'1', '2'など）
            - targetHandle: 'target'を指定
            - これにより、各分類結果応じた適切なフローへの分岐が可能
+
+      10. コードノード
+          - Python3のコードを実行可能
+          - 使用可能なライブラリ:
+            - datetime
+            - math
+            - random
+            - re
+            - string
+            - sys
+            - time
+            - traceback
+            - uuid
+            - os
+            - base64
+            - hashlib
+            - hmac
+            - binascii
+            - collections
+            - functools
+            - operator
+            - itertools
+            - json
+          - コードは必ずmain関数として実装
+          - 引数と戻り値の型アノテーションを付与
+          - 戻り値は辞書形式で返却
+          例：
+          ```python
+          def main(arg1: str) -> str:
+              return {
+                  "result": arg1[7:-3],
+              }
+          ```
+
+      11. IF/ELSEノード
+          - 条件分岐を実現するためのノード
+          - 複数の条件判定と分岐パスをサポート
+          - エッジ接続時の設定：
+            - sourceHandle: 'true'（IF条件成立時）
+            - sourceHandle: 'false'（ELSE条件時）
+          
+          条件の種類：
+          - contains（含む）
+          - not_contains（含まない）
+          - starts_with（..から始まる）
+          - ends_with（..から終わる）
+          - is（である）
+          - is_not（ではない）
+          - is_empty（空である）
+          - is_not_empty（空ではない）
+
+          分岐の動作メカニズム：
+          1. IFの条件：変数を選び、条件と満たすべき値を設定
+          2. True判定：IFパスを実行
+          3. False判定：ELSEパスを実行
+          4. ELIF True判定：ELIFパスを実行
+          5. ELIF False判定：次のELIFを判定または最後のELIFを実行
 
     output_format: |
       生成されるYAMLファイルは以下の形式に従ってください：
@@ -332,6 +457,18 @@ prompt:
               data:
                 sourceType: llm
                 targetType: end
+            - source: [IF/ELSEノードID]
+              target: [ターゲットノードID]
+              data:
+                sourceType: if-else
+                targetType: [ターゲットノードタイプ]
+              sourceHandle: 'true'  # IF条件成立時
+            - source: [IF/ELSEノードID]
+              target: [別のターゲットノードID]
+              data:
+                sourceType: if-else
+                targetType: [ターゲットノードタイプ]
+              sourceHandle: 'false'  # ELSE条件時
           nodes:
             - id: [開始ノードID]
               data:
@@ -466,4 +603,35 @@ prompt:
                 query_variable_selector:
                   - [入力ノードID]
                   - [変数名]
+
+            - id: [コードノードID]
+              data:
+                type: code
+                code_language: python3
+                code: |
+                  def main(arg1: str) -> str:
+                      return {
+                          "result": arg1[7:-3],
+                      }
+                title: Pythonコード実行
+                variables: []
+
+            - id: [IF/ELSEノードID]
+              type: if-else
+              data:
+                cases:
+                  - case_id: 'true'
+                    conditions:
+                      - comparison_operator: contains
+                        value: completed
+                        variable_selector:
+                          - [入力ノードID]
+                          - output
+                  - case_id: [ELIFケースID]
+                    conditions:
+                      - comparison_operator: contains
+                        value: 本
+                        variable_selector:
+                          - [入力ノードID]
+                          - book_content
       ```

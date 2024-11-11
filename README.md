@@ -12,6 +12,9 @@
   - 知識検索
   - HTTPリクエスト
   - JSONパース
+  - IF/ELSEノード
+  - codeノード
+
 
 ## ファイルの内容
 
@@ -68,6 +71,8 @@ https://github.com/Tomatio13/DifyWorkFlowGenerator.git
 - JSONパースノード：JSON処理
 - 質問分類器ノード：入力の分類
 - 知識検索ノード：データセットからの情報検索
+- IF/ELSEノード：条件分岐
+- codeノード：Pythonコードの実行
 
 *注意事項*: 
 HTTPリクエストノードとJSONパースノード入れてますが、プロンプトでの指定の仕方が判ってません。
