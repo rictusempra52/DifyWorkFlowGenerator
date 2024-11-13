@@ -70,6 +70,7 @@ prompt:
             - variables: #入力フィールドの定義
               - type: text-input
               - variable: 変数名
+              - type: number/string
               - label: 表示ラベル
               - required: true/false
               - max_length: 最大文字数
@@ -186,36 +187,61 @@ prompt:
             - type: code
             - data:
               - code_language: python3
-              - code: |
-                  # Pythonコードを記述
+              - code: "def main(arg1: str) -> str:\nreturn {\n\"task_url\": \"http://example.com/task/\"+arg1,\n}" # Pythonコードを記述しダブルクォートで括る。
               - title: Pythonコード実行
               - variables: []  # 必要に応じて変数を定義
+              - outputs:  # 出力変数の定義（オプション）
+                task_url:  # 変数名
+                  type: string  # 変数の型
+              - variables:  # 入力変数の定義（オプション）
+                - value_selector:  # 他のノードからの入力
+                  - [入力ノードID]
+                  - [変数名]
+                  variable: arg1  # 関数の引数名
 
           if_else_node:
             - id: ユニークなID
             - type: if-else
             - data:
-              - cases:
-                - case_id: 'true'  # IF条件用
+              cases:
+                - case_id: 'true'
                   conditions:
-                    - comparison_operator: contains/not_contains/starts_with/ends_with/is/is_not/is_empty/is_not_empty
-                      value: 条件値
+                    - comparison_operator: '='  # 等しい
+                      varType: number          # 変数の型
+                      numberVarType: constant  # 定数との比較の場合
+                      value: '5'              # 比較値
+                      variable_selector:       # 比較対象の変数
+                        - [入力ノードID]
+                        - [変数名]
+                - case_id: [ELIFケースID]
+                  conditions:
+                    - comparison_operator: '>'  # より大きい
+                      varType: number
+                      numberVarType: variable
+                      value: '{{#[入力ノードID].[変数名]#}}'
                       variable_selector:
                         - [入力ノードID]
                         - [変数名]
-                - case_id: [ELIF条件用のユニークID]  # ELIF条件用
-                  conditions:
-                    - comparison_operator: [比較演算子]
-                      value: [条件値]
-                      variable_selector:
-                        - [入力ノードID]
-                        - [変数名]
+
+          variable_aggregator_node:
+            - id: ユニークなID
+            - type: variable-aggregator
+            - data:
+              - output_type: string/number/boolean  # 出力変数の型
+              - variables:                         # 集約する変数のリスト
+                - - [入力ノードID1]
+                  - [変数名1]
+                - - [入力ノードID2]
+                  - [変数名2]
 
     usage_guide: |
       ワークフローの使用方法：
       1. 開始ノード
          - ユーザーからの入力を受け付ける
          - 入力された情報は変数として保存
+         - 変数の型（type）：
+           - Number: 数値型
+           - String: 文字列型
 
       2. LLMノード
          - OpenAIのgpt-4oモデルを使用（他のモデルは使用不可）
@@ -335,8 +361,13 @@ prompt:
             - operator
             - itertools
             - json
-          - コードは必ずmain関数として実装
+          - codeは必ずmain関数として実装
+          - codeはダブルクォートで括り、文字列として扱う。文字列内にダブルクォートがある場合は、\でエスケープすること。(例. \"type)
           - 引数と戻り値の型アノテーションを付与
+          - outputs: 出力変数の定義（オプション）
+            - 変数名と型を指定可能
+          - variables: 入力変数の定義（オプション）
+            - 他のノードからの入力を指定
           - 戻り値は辞書形式で返却
           例：
           ```python
@@ -353,22 +384,50 @@ prompt:
             - sourceHandle: 'true'（IF条件成立時）
             - sourceHandle: 'false'（ELSE条件時）
           
-          条件の種類：
-          - contains（含む）
-          - not_contains（含まない）
-          - starts_with（..から始まる）
-          - ends_with（..から終わる）
-          - is（である）
-          - is_not（ではない）
-          - is_empty（空である）
-          - is_not_empty（空ではない）
+          比較演算子の種類：
+          - '=' : 値が等しい
+          - '≠' : 値が等しくない
+          - '>' : 指定値より大きい
+          - '<' : 指定値より小さい
+          - '≧' : 指定値以上
+          - '≦' : 指定値以下
+          - '空' : 値が空である
+          - '空でない' : 値が空でない
+
+          変数の型（varType）：
+          - Number: 数値型
+          - String: 文字列型
+          - Boolean: 真偽値型
+
+          比較値の種類（numberVarType）：
+          - constant: 固定値との比較
+          - variable: 他の変数との比較
+            - 変数参照形式: {{#[ノードID].[変数名]#}}
 
           分岐の動作メカニズム：
-          1. IFの条件：変数を選び、条件と満たすべき値を設定
-          2. True判定：IFパスを実行
-          3. False判定：ELSEパスを実行
-          4. ELIF True判定：ELIFパスを実行
-          5. ELIF False判定：次のELIFを判定または最後のELIFを実行
+          1. IFの条件：変数を選び、比較演算子と比較値を設定
+          2. True判定：条件が成立した場合のパスを実行
+          3. False判定：条件が不成立の場合のパスを実行
+          4. ELIF条件：複数の条件分岐が必要な場合に使用
+
+      12. Variable Aggregatorノード
+          - 複数のノードからの出力を集約するためのノード
+          - 異なるパスからの結果を1つの出力にまとめる際に使用
+          
+          設定項目：
+          - output_type: 出力変数の型を指定
+            - string: 文字列型
+            - number: 数値型
+            - boolean: 真偽値型
+          
+          - variables: 集約する変数のリスト
+            - 形式: [[ノードID, 変数名], [ノードID, 変数名], ...]
+            - 複数の変数を順番に配列として保持
+          
+          使用例：
+          - IF/ELSE分岐後の結果の集約
+          - 複数のコードノードからの出力の統合
+          - 異なるLLMノードからの応答の統合
 
     output_format: |
       生成されるYAMLファイルは以下の形式に従ってください：
@@ -477,6 +536,7 @@ prompt:
                 variables:
                   - type: text-input
                     variable: [変数名]
+                    type: string/number
                     label: [入力フィールドのラベル]
                     required: true
                     max_length: [最大文字数]
@@ -608,30 +668,46 @@ prompt:
               data:
                 type: code
                 code_language: python3
-                code: |
-                  def main(arg1: str) -> str:
-                      return {
-                          "result": arg1[7:-3],
-                      }
-                title: Pythonコード実行
-                variables: []
+                code: # Pythonプログラムの文字列
+                outputs:  # 出力変数の定義（オプション）
+                  task_url:  # 変数名
+                    type: string  # 変数の型
+                variables:  # 入力変数の定義（オプション）
+                  - value_selector:  # 他のノードからの入力
+                    - [入力ノードID]
+                    - [変数名]
+                    variable: arg1  # 関数の引数名
 
             - id: [IF/ELSEノードID]
-              type: if-else
               data:
+                type: if-else
                 cases:
-                  - case_id: 'true'
+                  - case_id: 'true'  # IF条用
                     conditions:
-                      - comparison_operator: contains
-                        value: completed
+                      - comparison_operator: '='  # 等しい
+                        varType: number          # 変数の型
+                        numberVarType: constant  # 定数との比較の場合
+                        value: '5'              # 比較値
+                        variable_selector:       # 比較対象の変数
+                          - [入力ノードID]
+                          - [変数名]
+                  - case_id: [ELIFケースID]     # ELIF条件用
+                    conditions:
+                      - comparison_operator: '>'  # より大きい
+                        varType: number
+                        numberVarType: variable  # 変数との比較の場合
+                        value: '{{#[入力ノードID].[変数名]#}}'  # 比較対象の変数を参照
                         variable_selector:
                           - [入力ノードID]
-                          - output
-                  - case_id: [ELIFケースID]
-                    conditions:
-                      - comparison_operator: contains
-                        value: 本
-                        variable_selector:
-                          - [入力ノードID]
-                          - book_content
+                          - [変数名]
+
+            - id: [Variable Aggregatorノード]
+              data:
+                type: variable-aggregator
+                output_type: string  # または number/boolean
+                variables:
+                  - - [入力ノードID1]
+                    - [変数名1]
+                  - - [入力ノードID2]
+                    - [変数名2]
       ```
