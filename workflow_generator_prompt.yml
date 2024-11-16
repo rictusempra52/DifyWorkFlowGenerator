@@ -67,13 +67,30 @@ prompt:
           start_node:
             - id: ユニークなID
             - type: start
-            - variables: #入力フィールドの定義
+            - variables:
+              # 数値入力の例
+              - type: number
+                variable: input_number
+                label: 数値
+                required: true
+                min: 0
+                max: 1000000
+
+              # 段落入力の例
+              - type: paragraph
+                variable: danraku
+                label: 段落
+                required: true
+                max_length: 48
+                options: []
+
+              # 短文入力の例
               - type: text-input
-              - variable: 変数名
-              - type: number/string
-              - label: 表示ラベル
-              - required: true/false
-              - max_length: 最大文字数
+                variable: tanbun
+                label: 短文
+                required: true
+                max_length: 48
+                options: []
 
           llm_node:
             - id: ユニークなID
@@ -85,11 +102,14 @@ prompt:
               - completion_params:
                 - temperature: 生成時の温度設定
             - prompt_template:
-              - role: system
-              - text: シングルコートで括ったプロンプトテキスト
+              - id: ユニークなID(例'prompt1')
+                role: system
+                text: シングートで括ったプロンプトテキスト
             - context:
               - enabled: true
               - variable_selector: 使用する変数の指定
+            - vision:
+              - enabled: false
 
           end_node:
             - id: ユニークなID
@@ -187,13 +207,14 @@ prompt:
             - type: code
             - data:
               - code_language: python3
-              - code: "def main(arg1: str) -> str:\nreturn {\n\"task_url\": \"http://example.com/task/\"+arg1,\n}" # Pythonコードを記述しダブルクォートで括る。
+              - code: "def main(arg1: str) -> dict:\nreturn {\n\"task_url\": \"http://example.com/task/\"+arg1,\n}" # Pythonードを記述しダブルクォートで括る。
               - title: Pythonコード実行
               - variables: []  # 必要に応じて変数を定義
-              - outputs:  # 出力変数の定義（オプション）
+              - outputs:  # 出力変数の定義(必須)
                 task_url:  # 変数名
+                  children: null
                   type: string  # 変数の型
-              - variables:  # 入力変数の定義（オプション）
+              - variables:  # 入力変数の定義(必須)
                 - value_selector:  # 他のノードからの入力
                   - [入力ノードID]
                   - [変数名]
@@ -203,30 +224,41 @@ prompt:
             - id: ユニークなID
             - type: if-else
             - data:
-              cases:
-                - case_id: 'true'
-                  conditions:
-                    - comparison_operator: '='  # 等しい
-                      varType: number          # 変数の型
-                      numberVarType: constant  # 定数との比較の場合
-                      value: '5'              # 比較値
-                      variable_selector:       # 比較対象の変数
-                        - [入力ノードID]
-                        - [変数名]
-                - case_id: [ELIFケースID]
-                  conditions:
-                    - comparison_operator: '>'  # より大きい
-                      varType: number
-                      numberVarType: variable
-                      value: '{{#[入力ノードID].[変数名]#}}'
-                      variable_selector:
-                        - [入力ノードID]
-                        - [変数名]
+                title: 条件分岐
+                cases:
+                  - case_id: 'true'
+                    logical_operator: and
+                    conditions:
+                      - id: 5d3c1fa4-e26c-4f4b-a3a9-d4c32d63d5f8
+                        varType: number
+                        variable_selector:
+                          - [入力ノードID]
+                          - [変数名]
+                        comparison_operator: 'contains'  # ComparisonOperatorの列挙型に従う
+                        value: '5'
+                        numberVarType: constant
+                      - id: f764d294-6b89-46a2-9486-8b2c067e58ff
+                        varType: string
+                        variable_selector:
+                          - [入力ノードID]
+                          - [変数名]
+                        key: 'subKey'
+                        comparison_operator: 'contains'
+                        value: 'テスト'
+                        sub_variable_condition:
+                          case_id: 'sub1'
+                          logical_operator: and
+                          conditions:
+                            - id: 'sub-condition-1'
+                              varType: string
+                              comparison_operator: 'start with'
+                              value: 'prefix'
 
           variable_aggregator_node:
             - id: ユニークなID
             - type: variable-aggregator
             - data:
+              - title: 変数集約器
               - output_type: string/number/boolean  # 出力変数の型
               - variables:                         # 集約する変数のリスト
                 - - [入力ノードID1]
@@ -237,197 +269,483 @@ prompt:
     usage_guide: |
       ワークフローの使用方法：
       1. 開始ノード
-         - ユーザーからの入力を受け付ける
-         - 入力された情報は変数として保存
-         - 変数の型（type）：
-           - Number: 数値型
-           - String: 文字列型
+         ユースケース:
+         - ワークフローの開始点として機能
+         - ユーザーからの入力を受け付け
+         - 入力された情報を変数として保存
+
+         構造:
+         - id: ユニークなID（必須）
+         - type: start（固定）
+         - variables: 入力変数の配列（必須）
+           - type: 変数の型（必須）
+           - variable: 変数名（必須）
+           - label: 表示ラベル（必須）
+           - required: 必須入力かどうか（必須）
+           - その他設定（型に応じて必要）
+
+         変数型と固有設定:
+         - number（数値入力）:
+           - min: 最小値（オプション）
+           - max: 最大値（オプション）
+         - paragraph（段落テキスト）:
+           - max_length: 最大文字数（オプション）
+           - options: 選択肢（オプション）
+         - text-input（短文テキスト）:
+           - max_length: 最大文字数（オプション）
+           - options: 選択肢（オプション）
 
       2. LLMノード
-         - OpenAIのgpt-4oモデルを使用（他のモデルは使用不可）
-         - システムロールのプロンプトのみ使用可能（userロールは使用不可）
-         - プロンプトテキストは必ずシングルコートで括る
-         例：text: '{{#1731228343114.Query#}}の質問に答えて下さい。'
-         - 保存された変数を使用してプロンプトを構成
-         - 結果をテキストとして出力
-
+         ユースケース:
+         - テキスト生成や応答の作成
+         - 入力テキストの加工や変換
+         - 質問への回答生成
+         構造:
+         - id: ユニークなID（必須）
+         - type: llm（固定）
+         - model:（必須）
+           - provider: openai（固定）
+           - name: gpt-4o（固定）
+           - mode: chat（固定）
+           - completion_params:
+             - temperature: 0.0-1.0の値（必須）
+         - prompt_template:（必須）
+           - role: system（固定）
+           - text: プロンプトテキスト（必須）
+         - context:（必須）
+           - enabled: true（固定）
+           - variable_selector: 使用する変数の指定（必須）
+         - vision:
+           - enabled: false（固定）
+         特記事項:
+         - プロンプトはシングルクォートで括る必要あり
+         - システムロールのプロンプトのみ使用可能
+         - 変数参照形式: {{#ノードID.変数名#}}
+         
       3. 終了ノード
-         - 入力データと生成されたテキストを保存
-         - 必要に応じて後続の処理やAPIで使用可能
+         ユースケース:
+         - ワークフローの終了点として機能
+         - 処理結果の出力を定義
+         - 後続システムへのデータ受け渡し
+
+         構造:
+         - id: ユニークなID（必須）
+         - type: end（固定）
+         - outputs:（必須）
+           - value_selector:（必須）
+             - [ノードID]
+             - [変数名]
+           - variable: 出力変数名（必須）
+
+         特記事項:
+         - 少なくとも1つの出力変数が必要
+         - 複数の出力変数を定義可能
 
       4. HTTPリクエストノード
-         - 外部APIとの連携に使用
-         - リクエストボディはJSON形式で記述
-         - 変数の参照は {{#[ノードID].[変数名]#}} の形式で指定
-         - タイムアウトは必要に応じて設定（0は無制限）
-         - ヘッダーは「キー:値」の形式で指定
+         ユースケース:
+         - 外部APIとの連携
+         - データの送受信
+         - Webhook通知の送信
+         - 外部サービスとの統合
 
-         サポートされているHTTPメソッド：
+         構造:
+         - id: ユニークなID（必須）
+         - type: http-request（固定）
+         - data:（必須）
+           - authorization:（必須）
+             - config: 認証設定（オプション）
+             - type: 認証タイプ（必須）
+               - no-auth: 認証なし
+               - basic: Basic認証
+               - bearer: Bearer認証
+           - body:（必須）
+             - type: リクエストボディタイプ（必須）
+               - json: JSON形式
+               - form-data: マルチパートフォーム
+               - x-www-form-urlencoded: URLエンコード形式
+             - data: リクエストデータ（必須）
+           - headers: ヘッダー情報（必須）
+           - method: HTTPメソッド（必須）
+           - url: エンドポイントURL（必須）
+           - timeout:（オプション）
+             - max_connect_timeout: 接続タイムアウト秒数
+             - max_read_timeout: 読み取りタイムアウト秒数
+             - max_write_timeout: 書き込みタイムアウト秒数
+           - title: ノードのタイトル（必須）
+           - variables: 変数定義（オプション）
+
+         特記事項:
+         HTTPメソッド:
          - GET: リソースの取得
-           - サーバーからデータを取得
-           - クエリパラメータを使用して検索条件を指定可能
-         
-         - POST: データの送信
-           - フォームデータの送信
-           - ファイルのアップロード
-           - 新規リソースの作成
-         
-         - HEAD: ヘッダー情報の取得
-           - GETと同様だがレスポンスボディなし
-           - ヘッダー情報のみを取得
-         
-         - PATCH: 部分的な更新
-           - リクエスト-レスポンスチェーンの経路取得
-           - リソースの一部を更新
-         
-         - PUT: リソースの更新/作成
-           - 既存リソースの更新
-           - 新規リソースの作成
+           - クエリパラメータによる検索
+           - キャッシュ可能
+         - POST: データの送信・作成
+           - リソースの規成
+           - 大容量データの送信
+         - PUT: リソースの更新・作成
            - 完全な置き換え
-         
+           - べき等性あり
+         - PATCH: リソースの部分更新
+           - 一部フィールドの更新
+           - べき等性なし
          - DELETE: リソースの削除
-           - 指定されたリソースの削除をリクエスト
+           - 指定リソースの削除
+         - HEAD: ヘッダー情報の取得
+           - レスポンスボディなし
+
+         変数参照:
+         - 形式: {{#[ノードID].[変数名]#}}
+         - 他のノードの出力を参照可能
+         - JSONパスによるネストされた値の参照可能
+
+         タイムアウト設定:
+         - 0は無制限を意味する
+         - ミリ秒単位で指定可能
+         - 各フェーズで個別に設定可能
 
       5. JSON Parseノード
-         - JSONデータの解析と特定のキーの抽出に使用
-         - content: パースするJSON文字列（変数参照可能）
-         - json_filter: 抽出したいJSONのキー
-         - ensure_ascii: 1（ASCII文字のみ）または0（Unicode対応）
-         - 他のノードの出力をJSONとして解析する場合に使用
+         ユースケース:
+         - JSONデータの解析
+         - 特定のキーの抽出
+         - APIレスポンスの処理
+         - 構造化データの加工
+
+         構造:
+         - id: ユニークなID（必須）
+         - type: tool（固定）
+         - data:（必須）
+           - provider_id: json_process（固定）
+           - provider_name: json_process（固定）
+           - provider_type: builtin（固定）
+           - title: ノードのタイトル（必須）
+           - tool_configurations:（必須）
+             - ensure_ascii: 1または0（必須）
+           - tool_name: parse（固定）
+           - tool_parameters:（必須）
+             - content:（必須）
+               - type: mixed（固定）
+               - value: パース対象のJSON（必須）
+             - json_filter:（必須）
+               - type: mixed（固定）
+               - value: 抽出キー（必須）
+
+         特記事項:
+         データ形式:
+         - content: JSON文字列またはオブジェクト
+           - 他のノードの出力を参照可能
+           - 変数参照形式: {{#[ノードID].[変数名]#}}
+         
+         文字エンコード:
+         - ensure_ascii: 
+           - 1: ASCII文字のみ使用
+           - 0: Unicode文字を許可
+         
+         フィルタリング:
+         - 単一キー: "key"
+         - ネトしたキー: "key1.key2"
+         - 配列インデックス: "array[0]"
+         - 複数キー: ["key1", "key2"]
+         - 条件付き: "key[?(@.field=='value')]"
 
       6. 質問分類器ノード
-         - OpenAIのgpt-4oモデルを使用（他のモデルは使用不可）
-         - 入力された質問を事前定義されたクラスに分類
-         - クラスは複数定義可能
-         - 分類結果に基づいて異なるフローへ分岐可能
-         分岐パターン例：
-         パターン1（共通LLM使用）:
-         - クラス1の質問 → 知識取得1 → 共通LLM → 終了
-         - クラス2の質問 → 知識取得2 → 共通LLM → 終了
-         - その他の質問 → 直接終了ノードへ
+         ユースケース:
+         - 質問内容の自動分類
+         - インテントの判別
+         - 応答フローの最適化
+         - マルチパス処理の制御
+
+         構造:
+         - id: ユニークなID（必須）
+         - type: question-classifier（固定）
+         - data:（必須）
+           - title: ノードのタイトル（必須）
+           - model:（必須）
+             - provider: openai（固定）
+             - name: gpt-4o（固定）
+             - mode: chat（固定）
+             - completion_params:（必須）
+               - temperature: 0.0-1.0の値
+           - query_variable_selector:（必須）
+             - [入力ノードID]
+             - [変数名]
+           - classes:（必須）
+             - id: クラスID（必須）
+             - name: 分類名（必須）
+
+         特記事項:
+         分岐パターン:
+         1. 共通LLM使用パターン:
+            - クラス1の質問 → 知識取得1 → 共通LLM → 終了
+            - クラス2の質問 → 知識取得2 → 共通LLM → 終了
+            - その他の質問 → 直接終了ノードへ
          
-         パターン2（個別LLM使用）:
-         - クラス1の質問 → 知識取得1 → LLM1 → 終了1
-         - クラス2の質問 → 知識取得2 → LLM2 → 終了2
-         - その他の質問 → 直接終了ノードへ
+         2. 個別LLM使用パターン:
+            - クラス1の質問 → 知識取得1 → LLM1 → 終了1
+            - クラス2の質問 → 知識取得2 → LLM2 → 終了2
+            - その他の質問 → 直接終了ノードへ
+
+         エッジ接続設定:
+         - sourceHandle: 質問分類のID（'1', '2'など）
+         - targetHandle: 'target'を指定
+         - sourceType: question-classifier
+         - targetType: 接続先のノードタイプ
+
+         分類結果の利用:
+         - 各クラスに応じた適切な知識ベースの選択
+         - クラスごとに異なるプロンプトの使用
+         - 分類結果に基づく条件分岐の実装
 
       7. 知識取得ノード
-         - 指定されたデータセットから関連情報を検索
-         - ベクトル検索と重み付けスコアによるランキングが可能
-         - top_kで取得する結果数を制御
-         - embedding_model_nameとvector_weightで検索精度を調整可能
+         ユースケース:
+         - データセットからの関連情報検索
+         - 質問に関連する知識の取得
+         - コンテキストベースの応答生成
+         - 複数ソースからの情報統合
 
-      8. 質問分類器ノード
-         - 入力された質問を事前定義されたクラスに分類
-         - OpenAIのモデルを使用して分類を実行
-         - クラスは複数定義可能
-         - 分類結果に基づいて異なるフローへ分岐可能
-         分岐パターン例：
-         パターン1（共通LLM使用）:
-         - クラス1の質問 → 知識取得1 → 共通LLM → 終了
-         - クラス2の質問 → 知識取得2 → 共通LLM → 終了
-         - その他の質問 → 直接終了ノードへ
+         構造:
+         - id: ユニークなID（必須）
+         - type: knowledge-retrieval（固定）
+         - data:（必須）
+           - title: ノードのタイトル（必須）
+           - dataset_ids: データセットIDの配列（必須）
+           - retrieval_mode: multiple（固定）
+           - multiple_retrieval_config:（必須）
+             - reranking_enable: true/false（必須）
+             - reranking_mode: weighted_score（必須）
+             - top_k: 取得件数（必須）
+             - weights:（必須）
+               - vector_setting:（必須）
+                 - embedding_model_name: モデル名（必須）
+                 - embedding_provider_name: プロバイダー名（��須）
+                 - vector_weight: ベクトル重み（必須）
+               - keyword_setting:（必須）
+                 - keyword_weight: キーワード重み（必須）
+           - query_variable_selector:（必須）
+             - [入力ノードID]
+             - [変数名]
+
+         特記事項:
+         検索設定:
+         - embedding_model_name:
+           - text-embedding-3-large: 高精度モデル
+           - text-embedding-ada-002: 標準モデル
          
-         パターン2（個別LLM使用）:
-         - クラス1の質問 → 知識取得1 → LLM1 → 終了1
-         - クラス2の質問 → 知識取得2 → LLM2 → 終了2
-         - その他の質問 → 直接終了ノードへ
+         重み付け:
+         - vector_weight: 0.0-1.0
+           - 1.0: ベクトル検索のみ
+           - 0.0: キーワード検索のみ
+         - keyword_weight: 0.0-1.0
+           - 高値: キーワードマッチを重視
+           - 低値: セマンティック検索を重視
+         
+         検索結果:
+         - top_k: 取得する結果数
+           - 推奨値: 3-5
+           - 最大値: 10
+         - reranking: 検索結果の再ランキング
+           - weighted_score: スコアによる重み付け
+           - 精度と応答時間のバランスを調整可能
+           
+      8. コードノード
+          ユースケース:
+          - カスタムロジックの実装
+          - データの加工・変換
+          - 外部システムとの連携
+          - 条件分岐の制御
 
-      9. 質問分類器ノード
-         - エッジ接続時の重要な設定：
-           - sourceHandle: 質問分類のIDに対応（'1', '2'など）
-           - targetHandle: 'target'を指定
-           - これにより、各分類結果応じた適切なフローへの分岐が可能
+          構造:
+          - id: ユニークなID（必須）
+          - type: code（固定）
+          - data:（必須）
+            - code_language: python3（固定）
+            - code: Pythonコード（必須、ダブルクォートで括る）
+            - title: ノードのタイトル（必須）
+            - outputs:（必須）
+              - [変数名]:
+                - type: 変数の型（必須）
+                - children: null（固定）
+            - variables:（必須）
+              - value_selector:（必須）
+                - [入力ノードID]
+                - [変数名]
+              - variable: 関数の引数名（必須）
 
-      10. コードノード
-          - Python3のコードを実行可能
-          - 使用可能なライブラリ:
-            - datetime
-            - math
-            - random
-            - re
-            - string
-            - sys
-            - time
-            - traceback
-            - uuid
-            - os
-            - base64
-            - hashlib
-            - hmac
-            - binascii
-            - collections
-            - functools
-            - operator
-            - itertools
-            - json
-          - codeは必ずmain関数として実装
-          - codeはダブルクォートで括り、文字列として扱う。文字列内にダブルクォートがある場合は、\でエスケープすること。(例. \"type)
-          - 引数と戻り値の型アノテーションを付与
-          - outputs: 出力変数の定義（オプション）
-            - 変数名と型を指定可能
-          - variables: 入力変数の定義（オプション）
-            - 他のノードからの入力を指定
-          - 戻り値は辞書形式で返却
-          例：
+          特記事項:
+            - boolean型は利用できません。number型で0/1で代用してください。
+          使用可能なライブラリ:
+          - 基本ライブラリ:
+            - datetime: 日時処理
+            - math: 数学関数
+            - random: 乱数生成
+            - re: 正規表現
+            - string: 文字列操作
+          - システム関連:
+            - sys: システム操作
+            - os: OS操作
+            - time: 時間処理
+            - traceback: エラー追跡
+            - uuid: 一意識別子生成
+          - データ処理:
+            - json: JSON処理
+            - base64: エンコード/デコード
+            - collections: コレクション型
+            - itertools: イテレータ操作
+          - 暗号化/ハッシュ:
+            - hashlib: ハッシュ関数
+            - hmac: メッセージ認証
+            - binascii: バイナリ/ASCII変換
+          - 関数操作:
+            - functools: 関数ツール
+            - operator: 演算子インターフェース
+
+          出力変数の型:
+          - 基本型:
+            - string: 文字列型
+            - number: 数値型
+          - 特殊型:
+            - secret: 機密情報型
+            - object: オブジェクト型
+            - file: ファイル型
+          - 配列型:
+            - array: 基本配列型
+            - array[string]: 文字列配列
+            - array[number]: 数値配列
+            - array[object]: オブジェクト配列
+            - array[file]: ファイル配列
+          - その他:
+            - any: 任意の型
+
+          コード実装規則:
+          - main関数として実装（必須）
+          - 型アノテーション付与（必須）
+          - 戻り値は辞書形式（必須）
+          - ダブルクォートでコード全体を括る
+          - 内部のダブルクォートはエスケープ
+
+          実装例:
           ```python
-          def main(arg1: str) -> str:
+          def main(arg1: str) -> dict:
               return {
                   "result": arg1[7:-3],
               }
           ```
 
-      11. IF/ELSEノード
-          - 条件分岐を実現するためのノード
-          - 複数の条件判定と分岐パスをサポート
-          - エッジ接続時の設定：
-            - sourceHandle: 'true'（IF条件成立時）
-            - sourceHandle: 'false'（ELSE条件時）
-          
-          比較演算子の種類：
-          - '=' : 値が等しい
-          - '≠' : 値が等しくない
-          - '>' : 指定値より大きい
-          - '<' : 指定値より小さい
-          - '≧' : 指定値以上
-          - '≦' : 指定値以下
-          - '空' : 値が空である
-          - '空でない' : 値が空でない
+      9. IF/ELSEノード
+          ユースケース:
+          - 条件に基づくフロー制御
+          - 複数パスへの分岐処理
+          - データ値による処理の振り分け
+          - 条件付きロジックの実装
 
-          変数の型（varType）：
-          - Number: 数値型
-          - String: 文字列型
-          - Boolean: 真偽値型
+          構造:
+          - id: ユニークなID（必須）
+          - type: if-else（固定）
+          - data:（必須）
+            - title: ノードのタイトル（必須）
+            - cases:（必須）
+              - case_id: 条件ID（必須）
+              - logical_operator: and/or（必須）
+              - conditions:（必須）
+                - id: 条件のID（必須）
+                - varType: 変数の型（必須）
+                - variable_selector:（必須）
+                  - [入力ノードID]
+                  - [変数名]
+                - comparison_operator: 比較演算子（必須）
+                - value: 比較値（必須）
+                - numberVarType: 数値比較タイプ（数値型の場合必須）
+                - key: サブ変数のキー（オプショ��）
+                - sub_variable_condition: サブ変数の条件（オプション）
 
-          比較値の種類（numberVarType）：
-          - constant: 固定値との比較
-          - variable: 他の変数との比較
-            - 変数参照形式: {{#[ノードID].[変数名]#}}
+          特記事項:
+          比較演算子:
+          - 文字列比較:
+            - contains: 文字列に指定値が含まれる
+            - not contains: 文字列に指定値が含まれない
+            - start with: 指定値で始まる
+            - end with: 指定値で終わる
+            - is: 完全一致
+            - is not: 完全不一致
+          - 数値比較:
+            - =: 等しい
+            - ≠: 等しくない
+            - >: より大きい
+            - <: より小さい
+            - ≥: 以上
+            - ≤: 以下
+          - 存在チェック:
+            - empty: 空である
+            - not empty: 空でない
+            - is null: null値である
+            - is not null: null値でない
+          - リスト操作:
+            - in: リスト内に存在する
+            - not in: リスト内に存在しない
+            - all of: すべての条件を満たす
+          - その他:
+            - exists: 存在する
+            - not exists: 存在しない
 
-          分岐の動作メカニズム：
-          1. IFの条件：変数を選び、比較演算子と比較値を設定
-          2. True判定：条件が成立した場合のパスを実行
-          3. False判定：条件が不成立の場合のパスを実行
-          4. ELIF条件：複数の条件分岐が必要な場合に使用
+          変数型:
+          - number: 数値型
+            - numberVarType: constant/variable
+          - string: 文字列型
+          - boolean: 真偽値型
 
-      12. Variable Aggregatorノード
-          - 複数のノードからの出力を集約するためのノード
-          - 異なるパスからの結果を1つの出力にまとめる際に使用
+          エッジ接続:
+          - sourceHandle: 'true'
+            - IF条件成立時の接続
+          - sourceHandle: 'false'
+            - ELSE条件時の接続
+          - sourceType: if-else
+          - targetType: 接続先のノードタイプ
+
+      10. Variable Aggregatorノード
+          ユースケース:
+          - 複数のノードからの出力を集約
+          - 異なるパスからの結果の統合
+          - 分岐処理後のデータ統合
+          - 複数ソースからのデータマージ
+
+          構造:
+          - id: ユニークなID（必須）
+          - type: variable-aggregator（固定）
+          - data:（必須）
+            - title: ノードのタイトル（必須）
+            - output_type: 出力変数の型（必須）
+              - string: 文字列型
+              - number: 数値型
+              - boolean: 真偽値型
+            - variables: 集約する変数のリスト（必須）
+              - [入力ノードID, 変数名]の配列
+
+          特記事項:
+          データ集約パターン:
+          - IF/ELSE分岐後の統合:
+            - true分岐からの出力
+            - false分岐からの出力
+            - 単一の出力ストリームへの統合
           
-          設定項目：
-          - output_type: 出力変数の型を指定
-            - string: 文字列型
-            - number: 数値型
-            - boolean: 真偽値型
+          - 並列処理結果の統合:
+            - 複数LLMノードからの応答
+            - 複数APIコールの結果
+            - 異なる処理パスからの出力
           
-          - variables: 集約する変数のリスト
-            - 形式: [[ノードID, 変数名], [ノードID, 変数名], ...]
-            - 複数の変数を順番に配列として保持
-          
-          使用例：
-          - IF/ELSE分岐後の結果の集約
-          - 複数のコードノードからの出力の統合
-          - 異なるLLMノードからの応答の統合
+          変数の順序:
+          - リストの順序が出力順序に影響
+          - 先に指定した変数が優先
+          - 後続の変数は条件付きで使用
+
+          型変換ルール:
+          - string型への変換:
+            - number: 文字列表現に変換
+            - boolean: "true"/"false"に変換
+          - number型への変換:
+            - string: 数値表現のみ許可
+            - boolean: 1/0に変換
+          - boolean型への変換:
+            - string: "true"/"false"のみ許可
+            - number: 0以外はtrue
 
     output_format: |
       生成されるYAMLファイルは以下の形式に従ってください：
@@ -440,82 +758,7 @@ prompt:
       workflow:
         graph:
           edges:
-            # パターン1の例（共通LLM）
-            - source: [開始ノードID]
-              target: [質問分類器ノードID]
-              data:
-                sourceType: start
-                targetType: question-classifier
-            - source: [質問分類器ノードID]
-              sourceHandle: '1'  # 質問分類1用
-              target: [知識取得ノード1ID]
-              targetHandle: target
-              data:
-                sourceType: question-classifier
-                targetType: knowledge-retrieval
-            - source: [質問分類器ノードID]
-              sourceHandle: '2'  # 質問分類2用
-              target: [知識取得ノード2ID]
-              targetHandle: target
-              data:
-                sourceType: question-classifier
-                targetType: knowledge-retrieval
-            - source: [知識取得ノード1ID]
-              target: [共通LLMノードID]
-              data:
-                sourceType: knowledge-retrieval
-                targetType: llm
-            - source: [知識取得ノード2ID]
-              target: [共通LLMノードID]
-              data:
-                sourceType: knowledge-retrieval
-                targetType: llm
-            - source: [共通LLMノードID]
-              target: [終了ノードID]
-              data:
-                sourceType: llm
-                targetType: end
-            - source: [質問分類器ノードID]
-              target: [その他用終了ノードID]
-              data:
-                sourceType: question-classifier
-                targetType: end
-
-            # パターン2の例（個別LLM）
-            - source: [質問分類器ノードID]
-              sourceHandle: '1'  # 質問分類1用
-              target: [知識取得ノード1ID]
-              targetHandle: target
-              data:
-                sourceType: question-classifier
-                targetType: knowledge-retrieval
-            - source: [質問分類器ノードID]
-              sourceHandle: '2'  # 質問分類2用
-              target: [知識取得ノード2ID]
-              targetHandle: target
-              data:
-                sourceType: question-classifier
-                targetType: knowledge-retrieval
-            - source: [知識取得ノード1ID]
-              target: [LLMノード1ID]
-              data:
-                sourceType: knowledge-retrieval
-                targetType: llm
-            - source: [知識取得ノード2ID]
-              target: [LLMノード2ID]
-              data:
-                sourceType: knowledge-retrieval
-                targetType: llm
-            - source: [LLMノード1ID]
-              target: [終了ノード1ID]
-              data:
-                sourceType: llm
-                targetType: end
-            - source: [LLMノード2ID]
-              target: [終了ノード2ID]
-              data:
-                sourceType: llm
-                targetType: end
+            # IF/ELSE分岐のエッジ例
             - source: [IF/ELSEノードID]
               target: [ターゲットノードID]
               data:
@@ -528,6 +771,7 @@ prompt:
                 sourceType: if-else
                 targetType: [ターゲットノードタイプ]
               sourceHandle: 'false'  # ELSE条件時
+
           nodes:
             - id: [開始ノードID]
               data:
@@ -552,15 +796,16 @@ prompt:
                   completion_params:
                     temperature: 0.7
                 prompt_template:
-                  - role: system
-                    id: [プロンプトID]
+                  - id: [プロンプトID]
+                    role: system
                     text: '[プロンプトテキスト]'
                 context:
                   enabled: true
                   variable_selector:
                     - [開始ノードID]
                     - [変数名]
-
+                vision:
+                  enabled: false
             - id: [終了ノードID]
               data:
                 type: end
@@ -669,10 +914,11 @@ prompt:
                 type: code
                 code_language: python3
                 code: # Pythonプログラムの文字列
-                outputs:  # 出力変数の定義（オプション）
+                outputs:  # 出力変数の定義(必須)
                   task_url:  # 変数名
-                    type: string  # 変数の型
-                variables:  # 入力変数の定義（オプション）
+                    children: null
+                    type: string  # 上記で定義された型のいずれかを指定
+                variables:  # 入力変数の定義(必須)
                   - value_selector:  # 他のノードからの入力
                     - [入力ノードID]
                     - [変数名]
@@ -681,29 +927,37 @@ prompt:
             - id: [IF/ELSEノードID]
               data:
                 type: if-else
+                title: 条件分岐
                 cases:
-                  - case_id: 'true'  # IF条用
+                  - case_id: 'true'
+                    logical_operator: and
                     conditions:
-                      - comparison_operator: '='  # 等しい
-                        varType: number          # 変数の型
-                        numberVarType: constant  # 定数との比較の場合
-                        value: '5'              # 比較値
-                        variable_selector:       # 比較対象の変数
-                          - [入力ノードID]
-                          - [変数名]
-                  - case_id: [ELIFケースID]     # ELIF条件用
-                    conditions:
-                      - comparison_operator: '>'  # より大きい
-                        varType: number
-                        numberVarType: variable  # 変数との比較の場合
-                        value: '{{#[入力ノードID].[変数名]#}}'  # 比較対象の変数を参照
+                      - id: [条件ID]
+                        varType: [number/string/boolean]
                         variable_selector:
                           - [入力ノードID]
                           - [変数名]
+                        comparison_operator: [比較演算子]
+                        value: [比較値]
+                        numberVarType: [constant/variable]  # 数値型の場合
+                      - id: [条件ID2]
+                        varType: [変数型]
+                        key: [サブ変数キー]  # オプション
+                        comparison_operator: [比較演算子]
+                        value: [比較値]
+                        sub_variable_condition:  # オプション
+                          case_id: [サブ条件ID]
+                          logical_operator: and
+                          conditions:
+                            - id: [サブ条件ID]
+                              varType: [変数型]
+                              comparison_operator: [比較演算子]
+                              value: [比較値]
 
             - id: [Variable Aggregatorノード]
               data:
                 type: variable-aggregator
+                title: 変数集約器
                 output_type: string  # または number/boolean
                 variables:
                   - - [入力ノードID1]

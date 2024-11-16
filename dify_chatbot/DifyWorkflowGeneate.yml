@@ -73,162 +73,316 @@ model_config:
     \ question-classifier\n              targetType: [ターゲットノードタイプ]\n          - source:\
     \ 質問分類器ノードのID\n            sourceHandle: '2'  # 質問分類2用\n            target: ターゲットノードID2\n\
     \            targetHandle: target\n            data:\n              sourceType:\
-    \ question-classifier\n              targetType: [ターゲットノードタイプ]\n        \n   \
-    \     nodes:\n          start_node:\n            - id: ユニークなID\n            -\
-    \ type: start\n            - variables: #入力フィールドの定義\n              - type: text-input\n\
-    \              - variable: 変数名\n              - label: 表示ラベル\n              -\
-    \ required: true/false\n              - max_length: 最大文字数\n\n\n          llm_node:\n\
-    \            - id: ユニークなID\n            - type: llm\n            - model:\n  \
-    \            - provider: openai\n              - name: gpt-4o\n              -\
-    \ mode: chat\n              - completion_params:\n                - temperature:\
-    \ 生成時の温度設定\n            - prompt_template:\n              - role: system\n   \
-    \           - text: シングルコートで括ったプロンプトテキスト\n            - context:\n           \
-    \   - enabled: true\n              - variable_selector: 使用する変数の指定\n\n\n      \
-    \    end_node:\n            - id: ユニークなID\n            - type: end\n         \
-    \   - outputs: #出力変数の定義\n              - input_data: 入力データ\n              - generated_text:\
-    \ 生成されたテキスト\n\n\n          http_request_node:\n            - id: ユニークなID\n   \
-    \         - type: http-request\n            - data:\n              - authorization:\n\
-    \                  config: null\n                  type: no-auth/basic/bearer\
-    \  # 認証タイプを指定\n              - body:\n                  type: json/form-data/x-www-form-urlencoded\n\
-    \                  data:  # JSONの場合の例\n                    - id: [キーバリューID]\n\
-    \                      key: [キー名]\n                      type: text\n        \
-    \              value: [JSON形式の値]\n              - headers: Content-Type:[content-type]\
-    \  # 例：application/json\n              - method: get/post/put/delete\n       \
-    \       - url: [APIエンドポイントURL]\n              - timeout:\n                  max_connect_timeout:\
-    \ [接続タイムアウト秒数]\n                  max_read_timeout: [読み取りタイムアウト秒数]\n         \
-    \         max_write_timeout: [書き込みタイムアウト秒数]\n              - title: HTTPリクエスト\n\
-    \              - variables: []  # 必要に応じて変数を定義\n\n\n          json_parse_node:\n\
-    \            - id: ユニークなID\n            - type: tool\n            - data:\n  \
-    \            - provider_id: json_process\n              - provider_name: json_process\n\
-    \              - provider_type: builtin\n              - title: JSON Parse\n \
-    \             - tool_configurations:\n                  ensure_ascii: 1\n    \
-    \          - tool_name: parse\n              - tool_parameters:\n            \
-    \      content:\n                    type: mixed\n                    value: '{{#[入力ノードID].[変数名]#}}'\n\
-    \                  json_filter:\n                    type: mixed\n           \
-    \         value: [抽出したいJSONキー]\n\n\n          question_classifier_node:\n    \
-    \        - id: ユニークなID\n            - type: question-classifier\n            -\
-    \ data:\n              - title: 質問分類器\n              - model:\n              \
-    \    provider: openai\n                  name: gpt-4o\n                  mode:\
-    \ chat\n                  completion_params:\n                    temperature:\
-    \ 0.7\n              - query_variable_selector:\n                  - [入力ノードID]\n\
-    \                  - [変数名]\n              - classes:\n                  - id:\
-    \ [クラスID]\n                    name: [分類名]\n\n\n          knowledge_retrieval_node:\n\
-    \            - id: ユニークなID\n            - type: knowledge-retrieval\n        \
-    \    - data:\n              - title: 知識取得\n              - dataset_ids:\n    \
-    \              - [データセットID]\n              - retrieval_mode: multiple\n      \
-    \        - multiple_retrieval_config:\n                  reranking_enable: true\n\
-    \                  reranking_mode: weighted_score\n                  top_k: 4\n\
-    \                  weights:\n                    vector_setting:\n           \
-    \           embedding_model_name: text-embedding-3-large\n                   \
-    \   embedding_provider_name: openai\n                      vector_weight: 1\n\
-    \                    keyword_setting:\n                      keyword_weight: 0\n\
-    \              - query_variable_selector:\n                  - [入力ノードID]\n   \
-    \               - [変数名]\n\n\n    usage_guide: |\n      ワークフローの使用方法：\n      1.\
-    \ 開始ノード\n         - ユーザーからの入力を受け付ける\n         - 入力された情報は変数として保存\n\n\n      2.\
-    \ LLMノード\n         - OpenAIのgpt-4oモデルを使用（他のモデルは使用不可）\n         - システムロールのプロンプトのみ使用可能（userロールは使用不可）\n\
-    \         - プロンプトテキストは必ずシングルコートで括る\n         例：text: '{{#1731228343114.Query#}}の質問に答えて下さい。'\n\
-    \         - 保存された変数を使用してプロンプトを構成\n         - 結果をテキストとして出力\n\n\n      3. 終了ノード\n\
-    \         - 入力データと生成されたテキストを保存\n         - 必要に応じて後続の処理やAPIで使用可能\n\n\n      4.\
-    \ HTTPリクエストノード\n         - 外部APIとの連携に使用\n         - リクエストボディはJSON形式で記述\n     \
-    \    - 変数の参照は {{#[ノードID].[変数名]#}} の形式で指定\n         - タイムアウトは必要に応じて設定（0は無制限）\n\
-    \         - ヘッダーは「キー:値」の形式で指定\n\n\n      5. JSON Parseノード\n         - JSONデータの解析と特定のキーの抽出に使用\n\
-    \         - content: パースするJSON文字列（変数参照可能）\n         - json_filter: 抽出したいJSONのキー\n\
-    \         - ensure_ascii: 1（ASCII文字のみ）または0（Unicode対応）\n         - 他のノードの出力をJSONとして解析する場合に使用\n\
-    \n\n      6. 質問分類器ノード\n         - OpenAIのgpt-4oモデルを使用（他のモデルは使用不可）\n         -\
-    \ 入力された質問を事前定義されたクラスに分類\n         - クラスは複数定義可能\n         - 分類結果に基づいて異なるフローへ分岐可能\n\
-    \         分岐パターン例：\n         パターン1（共通LLM使用）:\n         - クラス1の質問 → 知識取得1 → 共通LLM\
-    \ → 終了\n         - クラス2の質問 → 知識取得2 → 共通LLM → 終了\n         - その他の質問 → 直接終了ノードへ\n\
-    \         \n         パターン2（個別LLM使用）:\n         - クラス1の質問 → 知識取得1 → LLM1 → 終了1\n\
-    \         - クラス2の質問 → 知識取得2 → LLM2 → 終了2\n         - その他の質問 → 直接終了ノードへ\n\n\n \
-    \     7. 知識取得ノード\n         - 指定されたデータセットから関連情報を検索\n         - ベクトル検索と重み付けスコアによるランキングが可能\n\
-    \         - top_kで取得する結果数を制御\n         - embedding_model_nameとvector_weightで検索精度を調整可能\n\
-    \n\n      8. 質問分類器ノード\n         - 入力された質問を事前定義されたクラスに分類\n         - OpenAIのモデルを使用して分類を実行\n\
-    \         - クラスは複数定義可能\n         - 分類結果に基づいて異なるフローへ分岐可能\n         分岐パターン例：\n \
-    \        パターン1（共通LLM使用）:\n         - クラス1の質問 → 知識取得1 → 共通LLM → 終了\n         -\
-    \ クラス2の質問 → 知識取得2 → 共通LLM → 終了\n         - その他の質問 → 直接終了ノードへ\n         \n    \
-    \     パターン2（個別LLM使用）:\n         - クラス1の質問 → 知識取得1 → LLM1 → 終了1\n         - クラス2の質問\
-    \ → 知識取得2 → LLM2 → 終了2\n         - その他の質問 → 直接終了ノードへ\n\n\n      9. 質問分類器ノード\n\
-    \         - エッジ接続時の重要な設定：\n           - sourceHandle: 質問分類のIDに対応（'1', '2'など）\n\
-    \           - targetHandle: 'target'を指定\n           - これにより、各分類結果応じた適切なフローへの分岐が可能\n\
+    \ question-classifier\n              targetType: [ターゲットノードタイプ]\n          - source:\
+    \ [IF/ELSEノードID]\n            target: [ターゲットノードID]\n            data:\n      \
+    \        sourceType: if-else\n              targetType: [ターゲットノードタイプ]\n      \
+    \      sourceHandle: 'true'  # IF条件成立時\n          - source: [IF/ELSEノードID]\n \
+    \           target: [別のターゲットノードID]\n            data:\n              sourceType:\
+    \ if-else\n              targetType: [ターゲットノードタイプ]\n            sourceHandle:\
+    \ 'false'  # ELSE条件時\n\n\n        nodes:\n          start_node:\n            -\
+    \ id: ユニークなID\n            - type: start\n            - variables:\n         \
+    \     # 数値入力の例\n              - type: number\n                variable: input_number\n\
+    \                label: 数値\n                required: true\n                min:\
+    \ 0\n                max: 1000000\n\n\n              # 段落入力の例\n              -\
+    \ type: paragraph\n                variable: danraku\n                label: 段落\n\
+    \                required: true\n                max_length: 48\n            \
+    \    options: []\n\n\n              # 短文入力の例\n              - type: text-input\n\
+    \                variable: tanbun\n                label: 短文\n               \
+    \ required: true\n                max_length: 48\n                options: []\n\
+    \n\n          llm_node:\n            - id: ユニークなID\n            - type: llm\n\
+    \            - model:\n              - provider: openai\n              - name:\
+    \ gpt-4o\n              - mode: chat\n              - completion_params:\n   \
+    \             - temperature: 生成時の温度設定\n            - prompt_template:\n      \
+    \        - id: ユニークなID(例'prompt1')\n                role: system\n           \
+    \     text: シングートで括ったプロンプトテキスト\n            - context:\n              - enabled:\
+    \ true\n              - variable_selector: 使用する変数の指定\n            - vision:\n\
+    \              - enabled: false\n\n\n          end_node:\n            - id: ユニークなID\n\
+    \            - type: end\n            - outputs: #出力変数の定義\n              - input_data:\
+    \ 入力データ\n              - generated_text: 生成されたテキスト\n\n\n          http_request_node:\n\
+    \            - id: ユニークなID\n            - type: http-request\n            - data:\n\
+    \              - authorization:\n                  config: null\n            \
+    \      type: no-auth/basic/bearer  # 認証タイプを指定\n              - body:\n       \
+    \           type: json/form-data/x-www-form-urlencoded\n                  data:\
+    \  # JSONの場合の例\n                    - id: [キーバリューID]\n                      key:\
+    \ [キー名]\n                      type: text\n                      value: [JSON形式の値]\n\
+    \              - headers: Content-Type:[content-type]  # 例：application/json\n\
+    \              - method: get/post/put/delete\n              - url: [APIエンドポイントURL]\n\
+    \              - timeout:\n                  max_connect_timeout: [接続タイムアウト秒数]\n\
+    \                  max_read_timeout: [読み取りタイムアウト秒数]\n                  max_write_timeout:\
+    \ [書き込みタイムアウト秒数]\n              - title: HTTPリクエスト\n              - variables:\
+    \ []  # 必要に応じて変数を定義\n\n\n          json_parse_node:\n            - id: ユニークなID\n\
+    \            - type: tool\n            - data:\n              - provider_id: json_process\n\
+    \              - provider_name: json_process\n              - provider_type: builtin\n\
+    \              - title: JSON Parse\n              - tool_configurations:\n   \
+    \               ensure_ascii: 1\n              - tool_name: parse\n          \
+    \    - tool_parameters:\n                  content:\n                    type:\
+    \ mixed\n                    value: '{{#[入力ノードID].[変数名]#}}'\n                \
+    \  json_filter:\n                    type: mixed\n                    value: [抽出したいJSONキー]\n\
+    \n\n          question_classifier_node:\n            - id: ユニークなID\n         \
+    \   - type: question-classifier\n            - data:\n              - title: 質問分類器\n\
+    \              - model:\n                  provider: openai\n                \
+    \  name: gpt-4o\n                  mode: chat\n                  completion_params:\n\
+    \                    temperature: 0.7\n              - query_variable_selector:\n\
+    \                  - [入力ノードID]\n                  - [変数名]\n              - classes:\n\
+    \                  - id: [クラスID]\n                    name: [分類名]\n\n\n      \
+    \    knowledge_retrieval_node:\n            - id: ユニークなID\n            - type:\
+    \ knowledge-retrieval\n            - data:\n              - title: 知識取得\n    \
+    \          - dataset_ids:\n                  - [データセットID]\n              - retrieval_mode:\
+    \ multiple\n              - multiple_retrieval_config:\n                  reranking_enable:\
+    \ true\n                  reranking_mode: weighted_score\n                  top_k:\
+    \ 4\n                  weights:\n                    vector_setting:\n       \
+    \               embedding_model_name: text-embedding-3-large\n               \
+    \       embedding_provider_name: openai\n                      vector_weight:\
+    \ 1\n                    keyword_setting:\n                      keyword_weight:\
+    \ 0\n              - query_variable_selector:\n                  - [入力ノードID]\n\
+    \                  - [変数名]\n\n\n          code_node:\n            - id: ユニークなID\n\
+    \            - type: code\n            - data:\n              - code_language:\
+    \ python3\n              - code: \"def main(arg1: str) -> dict:\\nreturn {\\n\\\
+    \"task_url\\\": \\\"http://example.com/task/\\\"+arg1,\\n}\" # Pythonードを記述しダブルクォートで括る。\n\
+    \              - title: Pythonコード実行\n              - variables: []  # 必要に応じて変数を定義\n\
+    \              - outputs:  # 出力変数の定義(必須)\n                task_url:  # 変数名\n \
+    \                 children: null\n                  type: string  # 変数の型\n   \
+    \           - variables:  # 入力変数の定義(必須)\n                - value_selector:  #\
+    \ 他のノードからの入力\n                  - [入力ノードID]\n                  - [変数名]\n     \
+    \             variable: arg1  # 関数の引数名\n\n\n          if_else_node:\n        \
+    \    - id: ユニークなID\n            - type: if-else\n            - data:\n       \
+    \         title: 条件分岐\n                cases:\n                  - case_id: 'true'\n\
+    \                    logical_operator: and\n                    conditions:\n\
+    \                      - id: 5d3c1fa4-e26c-4f4b-a3a9-d4c32d63d5f8\n          \
+    \              varType: number\n                        variable_selector:\n \
+    \                         - [入力ノードID]\n                          - [変数名]\n   \
+    \                     comparison_operator: 'contains'  # ComparisonOperatorの列挙型に従う\n\
+    \                        value: '5'\n                        numberVarType: constant\n\
+    \                      - id: f764d294-6b89-46a2-9486-8b2c067e58ff\n          \
+    \              varType: string\n                        variable_selector:\n \
+    \                         - [入力ノードID]\n                          - [変数名]\n   \
+    \                     key: 'subKey'\n                        comparison_operator:\
+    \ 'contains'\n                        value: 'テスト'\n                        sub_variable_condition:\n\
+    \                          case_id: 'sub1'\n                          logical_operator:\
+    \ and\n                          conditions:\n                            - id:\
+    \ 'sub-condition-1'\n                              varType: string\n         \
+    \                     comparison_operator: 'start with'\n                    \
+    \          value: 'prefix'\n\n\n          variable_aggregator_node:\n        \
+    \    - id: ユニークなID\n            - type: variable-aggregator\n            - data:\n\
+    \              - title: 変数集約器\n              - output_type: string/number/boolean\
+    \  # 出力変数の型\n              - variables:                         # 集約する変数のリスト\n\
+    \                - - [入力ノードID1]\n                  - [変数名1]\n                -\
+    \ - [入力ノードID2]\n                  - [変数名2]\n\n\n    usage_guide: |\n      ワークフローの使用方法：\n\
+    \      1. 開始ノード\n         ユースケース:\n         - ワークフローの開始点として機能\n         - ユーザーからの入力を受け付け\n\
+    \         - 入力された情報を変数として保存\n\n\n         構造:\n         - id: ユニークなID（必須）\n  \
+    \       - type: start（固定）\n         - variables: 入力変数の配列（必須）\n           - type:\
+    \ 変数の型（必須）\n           - variable: 変数名（必須）\n           - label: 表示ラベル（必須）\n  \
+    \         - required: 必須入力かどうか（必須）\n           - その他設定（型に応じて必要）\n\n\n        \
+    \ 変数型と固有設定:\n         - number（数値入力）:\n           - min: 最小値（オプション）\n        \
+    \   - max: 最大値（オプション）\n         - paragraph（段落テキスト）:\n           - max_length:\
+    \ 最大文字数（オプション）\n           - options: 選択肢（オプション）\n         - text-input（短文テキスト）:\n\
+    \           - max_length: 最大文字数（オプション）\n           - options: 選択肢（オプション）\n\n\n\
+    \      2. LLMノード\n         ユースケース:\n         - テキスト生成や応答の作成\n         - 入力テキストの加工や変換\n\
+    \         - 質問への回答生成\n         構造:\n         - id: ユニークなID（必須）\n         - type:\
+    \ llm（固定）\n         - model:（必須）\n           - provider: openai（固定）\n        \
+    \   - name: gpt-4o（固定）\n           - mode: chat（固定）\n           - completion_params:\n\
+    \             - temperature: 0.0-1.0の値（必須）\n         - prompt_template:（必須）\n\
+    \           - role: system（固定）\n           - text: プロンプトテキスト（必須）\n         - context:（必須）\n\
+    \           - enabled: true（固定）\n           - variable_selector: 使用する変数の指定（必須）\n\
+    \         - vision:\n           - enabled: false（固定）\n         特記事項:\n       \
+    \  - プロンプトはシングルクォートで括る必要あり\n         - システムロールのプロンプトのみ使用可能\n         - 変数参照形式:\
+    \ {{#ノードID.変数名#}}\n         \n      3. 終了ノード\n         ユースケース:\n         - ワークフローの終了点として機能\n\
+    \         - 処理結果の出力を定義\n         - 後続システムへのデータ受け渡し\n\n\n         構造:\n       \
+    \  - id: ユニークなID（必須）\n         - type: end（固定）\n         - outputs:（必須）\n    \
+    \       - value_selector:（必須）\n             - [ノードID]\n             - [変数名]\n\
+    \           - variable: 出力変数名（必須）\n\n\n         特記事項:\n         - 少なくとも1つの出力変数が必要\n\
+    \         - 複数の出力変数を定義可能\n\n\n      4. HTTPリクエストノード\n         ユースケース:\n      \
+    \   - 外部APIとの連携\n         - データの送受信\n         - Webhook通知の送信\n         - 外部サービスとの統合\n\
+    \n\n         構造:\n         - id: ユニークなID（必須）\n         - type: http-request（固定）\n\
+    \         - data:（必須）\n           - authorization:（必須）\n             - config:\
+    \ 認証設定（オプション）\n             - type: 認証タイプ（必須）\n               - no-auth: 認証なし\n\
+    \               - basic: Basic認証\n               - bearer: Bearer認証\n        \
+    \   - body:（必須）\n             - type: リクエストボディタイプ（必須）\n               - json:\
+    \ JSON形式\n               - form-data: マルチパートフォーム\n               - x-www-form-urlencoded:\
+    \ URLエンコード形式\n             - data: リクエストデータ（必須）\n           - headers: ヘッダー情報（必須）\n\
+    \           - method: HTTPメソッド（必須）\n           - url: エンドポイントURL（必須）\n       \
+    \    - timeout:（オプション）\n             - max_connect_timeout: 接続タイムアウト秒数\n     \
+    \        - max_read_timeout: 読み取りタイムアウト秒数\n             - max_write_timeout: 書き込みタイムアウト秒数\n\
+    \           - title: ノードのタイトル（必須）\n           - variables: 変数定義（オプション）\n\n\n \
+    \        特記事項:\n         HTTPメソッド:\n         - GET: リソースの取得\n           - クエリパラメータによる検索\n\
+    \           - キャッシュ可能\n         - POST: データの送信・作成\n           - リソースの規成\n    \
+    \       - 大容量データの送信\n         - PUT: リソースの更新・作成\n           - 完全な置き換え\n      \
+    \     - べき等性あり\n         - PATCH: リソースの部分更新\n           - 一部フィールドの更新\n       \
+    \    - べき等性なし\n         - DELETE: リソースの削除\n           - 指定リソースの削除\n         -\
+    \ HEAD: ヘッダー情報の取得\n           - レスポンスボディなし\n\n\n         変数参照:\n         - 形式:\
+    \ {{#[ノードID].[変数名]#}}\n         - 他のノードの出力を参照可能\n         - JSONパスによるネストされた値の参照可能\n\
+    \n\n         タイムアウト設定:\n         - 0は無制限を意味する\n         - ミリ秒単位で指定可能\n       \
+    \  - 各フェーズで個別に設定可能\n\n\n      5. JSON Parseノード\n         ユースケース:\n         - JSONデータの解析\n\
+    \         - 特定のキーの抽出\n         - APIレスポンスの処理\n         - 構造化データの加工\n\n\n     \
+    \    構造:\n         - id: ユニークなID（必須）\n         - type: tool（固定）\n         - data:（必須）\n\
+    \           - provider_id: json_process（固定）\n           - provider_name: json_process（固定）\n\
+    \           - provider_type: builtin（固定）\n           - title: ノードのタイトル（必須）\n \
+    \          - tool_configurations:（必須）\n             - ensure_ascii: 1または0（必須）\n\
+    \           - tool_name: parse（固定）\n           - tool_parameters:（必須）\n      \
+    \       - content:（必須）\n               - type: mixed（固定）\n               - value:\
+    \ パース対象のJSON（必須）\n             - json_filter:（必須）\n               - type: mixed（固定）\n\
+    \               - value: 抽出キー（必須）\n\n\n         特記事項:\n         データ形式:\n     \
+    \    - content: JSON文字列またはオブジェクト\n           - 他のノードの出力を参照可能\n           - 変数参照形式:\
+    \ {{#[ノードID].[変数名]#}}\n         \n         文字エンコード:\n         - ensure_ascii:\
+    \ \n           - 1: ASCII文字のみ使用\n           - 0: Unicode文字を許可\n         \n   \
+    \      フィルタリング:\n         - 単一キー: \"key\"\n         - ネトしたキー: \"key1.key2\"\n\
+    \         - 配列インデックス: \"array[0]\"\n         - 複数キー: [\"key1\", \"key2\"]\n  \
+    \       - 条件付き: \"key[?(@.field=='value')]\"\n\n\n      6. 質問分類器ノード\n        \
+    \ ユースケース:\n         - 質問内容の自動分類\n         - インテントの判別\n         - 応答フローの最適化\n \
+    \        - マルチパス処理の制御\n\n\n         構造:\n         - id: ユニークなID（必須）\n        \
+    \ - type: question-classifier（固定）\n         - data:（必須）\n           - title: ノードのタイトル（必須）\n\
+    \           - model:（必須）\n             - provider: openai（固定）\n             -\
+    \ name: gpt-4o（固定）\n             - mode: chat（固定）\n             - completion_params:（必須）\n\
+    \               - temperature: 0.0-1.0の値\n           - query_variable_selector:（必須）\n\
+    \             - [入力ノードID]\n             - [変数名]\n           - classes:（必須）\n \
+    \            - id: クラスID（必須）\n             - name: 分類名（必須）\n\n\n         特記事項:\n\
+    \         分岐パターン:\n         1. 共通LLM使用パターン:\n            - クラス1の質問 → 知識取得1 → 共通LLM\
+    \ → 終了\n            - クラス2の質問 → 知識取得2 → 共通LLM → 終了\n            - その他の質問 → 直接終了ノードへ\n\
+    \         \n         2. 個別LLM使用パターン:\n            - クラス1の質問 → 知識取得1 → LLM1 → 終了1\n\
+    \            - クラス2の質問 → 知識取得2 → LLM2 → 終了2\n            - その他の質問 → 直接終了ノードへ\n\
+    \n\n         エッジ接続設定:\n         - sourceHandle: 質問分類のID（'1', '2'など）\n        \
+    \ - targetHandle: 'target'を指定\n         - sourceType: question-classifier\n  \
+    \       - targetType: 接続先のノードタイプ\n\n\n         分類結果の利用:\n         - 各クラスに応じた適切な知識ベースの選択\n\
+    \         - クラスごとに異なるプロンプトの使用\n         - 分類結果に基づく条件分岐の実装\n\n\n      7. 知識取得ノード\n\
+    \         ユースケース:\n         - データセットからの関連情報検索\n         - 質問に関連する知識の取得\n     \
+    \    - コンテキストベースの応答生成\n         - 複数ソースからの情報統合\n\n\n         構造:\n         - id:\
+    \ ユニークなID（必須）\n         - type: knowledge-retrieval（固定）\n         - data:（必須）\n\
+    \           - title: ノードのタイトル（必須）\n           - dataset_ids: データセットIDの配列（必須）\n\
+    \           - retrieval_mode: multiple（固定）\n           - multiple_retrieval_config:（必須）\n\
+    \             - reranking_enable: true/false（必須）\n             - reranking_mode:\
+    \ weighted_score（必須）\n             - top_k: 取得件数（必須）\n             - weights:（必須）\n\
+    \               - vector_setting:（必須）\n                 - embedding_model_name:\
+    \ モデル名（必須）\n                 - embedding_provider_name: プロバイダー名（��須）\n       \
+    \          - vector_weight: ベクトル重み（必須）\n               - keyword_setting:（必須）\n\
+    \                 - keyword_weight: キーワード重み（必須）\n           - query_variable_selector:（必須）\n\
+    \             - [入力ノードID]\n             - [変数名]\n\n\n         特記事項:\n        \
+    \ 検索設定:\n         - embedding_model_name:\n           - text-embedding-3-large:\
+    \ 高精度モデル\n           - text-embedding-ada-002: 標準モデル\n         \n         重み付け:\n\
+    \         - vector_weight: 0.0-1.0\n           - 1.0: ベクトル検索のみ\n           - 0.0:\
+    \ キーワード検索のみ\n         - keyword_weight: 0.0-1.0\n           - 高値: キーワードマッチを重視\n\
+    \           - 低値: セマンティック検索を重視\n         \n         検索結果:\n         - top_k: 取得する結果数\n\
+    \           - 推奨値: 3-5\n           - 最大値: 10\n         - reranking: 検索結果の再ランキング\n\
+    \           - weighted_score: スコアによる重み付け\n           - 精度と応答時間のバランスを調整可能\n   \
+    \        \n      8. コードノード\n          ユースケース:\n          - カスタムロジックの実装\n     \
+    \     - データの加工・変換\n          - 外部システムとの連携\n          - 条件分岐の制御\n\n\n         \
+    \ 構造:\n          - id: ユニークなID（必須）\n          - type: code（固定）\n          - data:（必須）\n\
+    \            - code_language: python3（固定）\n            - code: Pythonコード（必須、ダブルクォートで括る）\n\
+    \            - title: ノードのタイトル（必須）\n            - outputs:（必須）\n             \
+    \ - [変数名]:\n                - type: 変数の型（必須）\n                - children: null（固定）\n\
+    \            - variables:（必須）\n              - value_selector:（必須）\n         \
+    \       - [入力ノードID]\n                - [変数名]\n              - variable: 関数の引数名（必須）\n\
+    \n\n          特記事項:\n            - boolean型は利用できません。number型で0/1で代用してください。\n  \
+    \        使用可能なライブラリ:\n          - 基本ライブラリ:\n            - datetime: 日時処理\n   \
+    \         - math: 数学関数\n            - random: 乱数生成\n            - re: 正規表現\n \
+    \           - string: 文字列操作\n          - システム関連:\n            - sys: システム操作\n\
+    \            - os: OS操作\n            - time: 時間処理\n            - traceback: エラー追跡\n\
+    \            - uuid: 一意識別子生成\n          - データ処理:\n            - json: JSON処理\n\
+    \            - base64: エンコード/デコード\n            - collections: コレクション型\n      \
+    \      - itertools: イテレータ操作\n          - 暗号化/ハッシュ:\n            - hashlib: ハッシュ関数\n\
+    \            - hmac: メッセージ認証\n            - binascii: バイナリ/ASCII変換\n         \
+    \ - 関数操作:\n            - functools: 関数ツール\n            - operator: 演算子インターフェース\n\
+    \n\n          出力変数の型:\n          - 基本型:\n            - string: 文字列型\n        \
+    \    - number: 数値型\n          - 特殊型:\n            - secret: 機密情報型\n          \
+    \  - object: オブジェクト型\n            - file: ファイル型\n          - 配列型:\n          \
+    \  - array: 基本配列型\n            - array[string]: 文字列配列\n            - array[number]:\
+    \ 数値配列\n            - array[object]: オブジェクト配列\n            - array[file]: ファイル配列\n\
+    \          - その他:\n            - any: 任意の型\n\n\n          コード実装規則:\n         \
+    \ - main関数として実装（必須）\n          - 型アノテーション付与（必須）\n          - 戻り値は辞書形式（必須）\n  \
+    \        - ダブルクォートでコード全体を括る\n          - 内部のダブルクォートはエスケープ\n\n\n          実装例:\n\
+    \          ```python\n          def main(arg1: str) -> dict:\n              return\
+    \ {\n                  \"result\": arg1[7:-3],\n              }\n          ```\n\
+    \n\n      9. IF/ELSEノード\n          ユースケース:\n          - 条件に基づくフロー制御\n        \
+    \  - 複数パスへの分岐処理\n          - データ値による処理の振り分け\n          - 条件付きロジックの実装\n\n\n   \
+    \       構造:\n          - id: ユニークなID（必須）\n          - type: if-else（固定）\n    \
+    \      - data:（必須）\n            - title: ノードのタイトル（必須）\n            - cases:（必須）\n\
+    \              - case_id: 条件ID（必須）\n              - logical_operator: and/or（必須）\n\
+    \              - conditions:（必須）\n                - id: 条件のID（必須）\n          \
+    \      - varType: 変数の型（必須）\n                - variable_selector:（必須）\n       \
+    \           - [入力ノードID]\n                  - [変数名]\n                - comparison_operator:\
+    \ 比較演算子（必須）\n                - value: 比較値（必須）\n                - numberVarType:\
+    \ 数値比較タイプ（数値型の場合必須）\n                - key: サブ変数のキー（オプショ��）\n                -\
+    \ sub_variable_condition: サブ変数の条件（オプション）\n\n\n          特記事項:\n          比較演算子:\n\
+    \          - 文字列比較:\n            - contains: 文字列に指定値が含まれる\n            - not contains:\
+    \ 文字列に指定値が含まれない\n            - start with: 指定値で始まる\n            - end with: 指定値で終わる\n\
+    \            - is: 完全一致\n            - is not: 完全不一致\n          - 数値比較:\n    \
+    \        - =: 等しい\n            - ≠: 等しくない\n            - >: より大きい\n          \
+    \  - <: より小さい\n            - ≥: 以上\n            - ≤: 以下\n          - 存在チェック:\n\
+    \            - empty: 空である\n            - not empty: 空でない\n            - is null:\
+    \ null値である\n            - is not null: null値でない\n          - リスト操作:\n        \
+    \    - in: リスト内に存在する\n            - not in: リスト内に存在しない\n            - all of:\
+    \ すべての条件を満たす\n          - その他:\n            - exists: 存在する\n            - not\
+    \ exists: 存在しない\n\n\n          変数型:\n          - number: 数値型\n            - numberVarType:\
+    \ constant/variable\n          - string: 文字列型\n          - boolean: 真偽値型\n\n\n\
+    \          エッジ接続:\n          - sourceHandle: 'true'\n            - IF条件成立時の接続\n\
+    \          - sourceHandle: 'false'\n            - ELSE条件時の接続\n          - sourceType:\
+    \ if-else\n          - targetType: 接続先のノードタイプ\n\n\n      10. Variable Aggregatorノード\n\
+    \          ユースケース:\n          - 複数のノードからの出力を集約\n          - 異なるパスからの結果の統合\n  \
+    \        - 分岐処理後のデータ統合\n          - 複数ソースからのデータマージ\n\n\n          構造:\n      \
+    \    - id: ユニークなID（必須）\n          - type: variable-aggregator（固定）\n          -\
+    \ data:（必須）\n            - title: ノードのタイトル（必須）\n            - output_type: 出力変数の型（必須）\n\
+    \              - string: 文字列型\n              - number: 数値型\n              - boolean:\
+    \ 真偽値型\n            - variables: 集約する変数のリスト（必須）\n              - [入力ノードID, 変数名]の配列\n\
+    \n\n          特記事項:\n          データ集約パターン:\n          - IF/ELSE分岐後の統合:\n      \
+    \      - true分岐からの出力\n            - false分岐からの出力\n            - 単一の出力ストリームへの統合\n\
+    \          \n          - 並列処理結果の統合:\n            - 複数LLMノードからの応答\n           \
+    \ - 複数APIコールの結果\n            - 異なる処理パスからの出力\n          \n          変数の順序:\n  \
+    \        - リストの順序が出力順序に影響\n          - 先に指定した変数が優先\n          - 後続の変数は条件付きで使用\n\
+    \n\n          型変換ルール:\n          - string型への変換:\n            - number: 文字列表現に変換\n\
+    \            - boolean: \"true\"/\"false\"に変換\n          - number型への変換:\n    \
+    \        - string: 数値表現のみ許可\n            - boolean: 1/0に変換\n          - boolean型への変換:\n\
+    \            - string: \"true\"/\"false\"のみ許可\n            - number: 0以外はtrue\n\
     \n\n    output_format: |\n      生成されるYAMLファイルは以下の形式に従ってください：\n      ```yaml\n\
     \      app:\n        mode: workflow\n        name: [ワークフロー名]\n        version:\
     \ 0.1.3\n\n\n      workflow:\n        graph:\n          edges:\n            #\
-    \ パターン1の例（共通LLM）\n            - source: [開始ノードID]\n              target: [質問分類器ノードID]\n\
-    \              data:\n                sourceType: start\n                targetType:\
-    \ question-classifier\n            - source: [質問分類器ノードID]\n              sourceHandle:\
-    \ '1'  # 質問分類1用\n              target: [知識取得ノード1ID]\n              targetHandle:\
-    \ target\n              data:\n                sourceType: question-classifier\n\
-    \                targetType: knowledge-retrieval\n            - source: [質問分類器ノードID]\n\
-    \              sourceHandle: '2'  # 質問分類2用\n              target: [知識取得ノード2ID]\n\
-    \              targetHandle: target\n              data:\n                sourceType:\
-    \ question-classifier\n                targetType: knowledge-retrieval\n     \
-    \       - source: [知識取得ノード1ID]\n              target: [共通LLMノードID]\n         \
-    \     data:\n                sourceType: knowledge-retrieval\n               \
-    \ targetType: llm\n            - source: [知識取得ノード2ID]\n              target: [共通LLMノードID]\n\
-    \              data:\n                sourceType: knowledge-retrieval\n      \
-    \          targetType: llm\n            - source: [共通LLMノードID]\n             \
-    \ target: [終了ノードID]\n              data:\n                sourceType: llm\n  \
-    \              targetType: end\n            - source: [質問分類器ノードID]\n         \
-    \     target: [その他用終了ノードID]\n              data:\n                sourceType:\
-    \ question-classifier\n                targetType: end\n\n\n            # パターン2の例（個別LLM）\n\
-    \            - source: [質問分類器ノードID]\n              sourceHandle: '1'  # 質問分類1用\n\
-    \              target: [知識取得ノード1ID]\n              targetHandle: target\n    \
-    \          data:\n                sourceType: question-classifier\n          \
-    \      targetType: knowledge-retrieval\n            - source: [質問分類器ノードID]\n \
-    \             sourceHandle: '2'  # 質問分類2用\n              target: [知識取得ノード2ID]\n\
-    \              targetHandle: target\n              data:\n                sourceType:\
-    \ question-classifier\n                targetType: knowledge-retrieval\n     \
-    \       - source: [知識取得ノード1ID]\n              target: [LLMノード1ID]\n          \
-    \    data:\n                sourceType: knowledge-retrieval\n                targetType:\
-    \ llm\n            - source: [知識取得ノード2ID]\n              target: [LLMノード2ID]\n\
-    \              data:\n                sourceType: knowledge-retrieval\n      \
-    \          targetType: llm\n            - source: [LLMノード1ID]\n              target:\
-    \ [終了ノード1ID]\n              data:\n                sourceType: llm\n         \
-    \       targetType: end\n            - source: [LLMノード2ID]\n              target:\
-    \ [終了ノード2ID]\n              data:\n                sourceType: llm\n         \
-    \       targetType: end\n          nodes:\n            - id: [開始ノードID]\n     \
-    \         data:\n                type: start\n                title: 開始\n    \
-    \            variables:\n                  - type: text-input\n              \
-    \      variable: [変数名]\n                    label: [入力フィールドのラベル]\n           \
-    \         required: true\n                    max_length: [最大文字数]\n\n\n      \
-    \      - id: [LLMノードID]\n              data:\n                type: llm\n    \
-    \            title: LLM\n                model:\n                  provider: openai\n\
-    \                  name: gpt-4o\n                  mode: chat\n              \
-    \    completion_params:\n                    temperature: 0.7\n              \
-    \  prompt_template:\n                  - role: system\n                    id:\
-    \ [プロンプトID]\n                    text: '[プロンプトテキスト]'\n                context:\n\
-    \                  enabled: true\n                  variable_selector:\n     \
-    \               - [開始ノードID]\n                    - [変数名]\n\n\n            - id:\
-    \ [終了ノードID]\n              data:\n                type: end\n                title:\
-    \ 終了\n                outputs:\n                  - value_selector:\n        \
-    \              - [開始ノードID]\n                      - [変数名]\n                  \
-    \  variable: inputData\n                  - value_selector:\n                \
-    \      - [LLMノードID]\n                      - text\n                    variable:\
-    \ generatedText\n\n\n            - id: [HTTPリクエストノードID]\n              data:\n\
-    \                type: http-request\n                authorization:\n        \
-    \          config: null\n                  type: no-auth  # または必要な認証タイプ\n    \
-    \            body:\n                  type: json\n                  data:\n  \
-    \                  - id: [キーバリューID]\n                      key: ''\n         \
-    \             type: text\n                      value: |\n                   \
-    \     {\n                          \"key1\": \"{{#[開始ノードID].[変数名]#}}\",\n    \
-    \                      \"key2\": \"値2\"\n                        }\n         \
-    \       headers: Content-Type:application/json\n                method: post\n\
-    \                url: [APIエンドポイントURL]\n                timeout:\n            \
-    \      max_connect_timeout: 0\n                  max_read_timeout: 0\n       \
-    \           max_write_timeout: 0\n                title: HTTPリクエスト\n         \
-    \       variables: []\n\n\n            - id: [JSONパースノードID]\n              data:\n\
-    \                type: tool\n                desc: ''\n                provider_id:\
-    \ json_process\n                provider_name: json_process\n                provider_type:\
-    \ builtin\n                selected: false\n                title: JSON Parse\n\
-    \                tool_configurations:\n                  ensure_ascii: 1\n   \
-    \             tool_label: JSON Parse\n                tool_name: parse\n     \
-    \           tool_parameters:\n                  content:\n                   \
-    \ type: mixed\n                    value: '{{#[入力ノードID].[変数名]#}}'\n          \
-    \        json_filter:\n                    type: mixed\n                    value:\
-    \ [抽出したいJSONキー]\n\n\n            - id: [質問分類器ノードID]\n              data:\n   \
-    \             type: question-classifier\n                title: 質問分類器\n      \
-    \          model:\n                  provider: openai\n                  name:\
-    \ gpt-4o\n                  mode: chat\n                  completion_params:\n\
+    \ IF/ELSE分岐のエッジ例\n            - source: [IF/ELSEノードID]\n              target:\
+    \ [ターゲットノードID]\n              data:\n                sourceType: if-else\n   \
+    \             targetType: [ターゲットノードタイプ]\n              sourceHandle: 'true'  #\
+    \ IF条件成立時\n            - source: [IF/ELSEノードID]\n              target: [別のターゲットノードID]\n\
+    \              data:\n                sourceType: if-else\n                targetType:\
+    \ [ターゲットノードタイプ]\n              sourceHandle: 'false'  # ELSE条件時\n\n\n        \
+    \  nodes:\n            - id: [開始ノードID]\n              data:\n                type:\
+    \ start\n                title: 開始\n                variables:\n             \
+    \     - type: text-input\n                    variable: [変数名]\n              \
+    \      type: string/number\n                    label: [入力フィールドのラベル]\n       \
+    \             required: true\n                    max_length: [最大文字数]\n\n\n  \
+    \          - id: [LLMノードID]\n              data:\n                type: llm\n\
+    \                title: LLM\n                model:\n                  provider:\
+    \ openai\n                  name: gpt-4o\n                  mode: chat\n     \
+    \             completion_params:\n                    temperature: 0.7\n     \
+    \           prompt_template:\n                  - id: [プロンプトID]\n            \
+    \        role: system\n                    text: '[プロンプトテキスト]'\n             \
+    \   context:\n                  enabled: true\n                  variable_selector:\n\
+    \                    - [開始ノードID]\n                    - [変数名]\n              \
+    \  vision:\n                  enabled: false\n            - id: [終了ノードID]\n  \
+    \            data:\n                type: end\n                title: 終了\n   \
+    \             outputs:\n                  - value_selector:\n                \
+    \      - [開始ノードID]\n                      - [変数名]\n                    variable:\
+    \ inputData\n                  - value_selector:\n                      - [LLMノードID]\n\
+    \                      - text\n                    variable: generatedText\n\n\
+    \n            - id: [HTTPリクエストノードID]\n              data:\n                type:\
+    \ http-request\n                authorization:\n                  config: null\n\
+    \                  type: no-auth  # または必要な認証タイプ\n                body:\n     \
+    \             type: json\n                  data:\n                    - id: [キーバリューID]\n\
+    \                      key: ''\n                      type: text\n           \
+    \           value: |\n                        {\n                          \"\
+    key1\": \"{{#[開始ノードID].[変数名]#}}\",\n                          \"key2\": \"値2\"\
+    \n                        }\n                headers: Content-Type:application/json\n\
+    \                method: post\n                url: [APIエンドポイントURL]\n        \
+    \        timeout:\n                  max_connect_timeout: 0\n                \
+    \  max_read_timeout: 0\n                  max_write_timeout: 0\n             \
+    \   title: HTTPリクエスト\n                variables: []\n\n\n            - id: [JSONパースノードID]\n\
+    \              data:\n                type: tool\n                desc: ''\n \
+    \               provider_id: json_process\n                provider_name: json_process\n\
+    \                provider_type: builtin\n                selected: false\n   \
+    \             title: JSON Parse\n                tool_configurations:\n      \
+    \            ensure_ascii: 1\n                tool_label: JSON Parse\n       \
+    \         tool_name: parse\n                tool_parameters:\n               \
+    \   content:\n                    type: mixed\n                    value: '{{#[入力ノードID].[変数名]#}}'\n\
+    \                  json_filter:\n                    type: mixed\n           \
+    \         value: [抽出したいJSONキー]\n\n\n            - id: [質問分類器ノードID]\n         \
+    \     data:\n                type: question-classifier\n                title:\
+    \ 質問分類器\n                model:\n                  provider: openai\n        \
+    \          name: gpt-4o\n                  mode: chat\n                  completion_params:\n\
     \                    temperature: 0.7\n                query_variable_selector:\n\
     \                  - [入力ノードID]\n                  - [変数名]\n                classes:\n\
     \                  - id: '1'\n                    name: [分類名1]\n             \
@@ -242,7 +396,34 @@ model_config:
     \              embedding_provider_name: openai\n                      vector_weight:\
     \ 1\n                    keyword_setting:\n                      keyword_weight:\
     \ 0\n                query_variable_selector:\n                  - [入力ノードID]\n\
-    \                  - [変数名]\n      ```"
+    \                  - [変数名]\n\n\n            - id: [コードノードID]\n              data:\n\
+    \                type: code\n                code_language: python3\n        \
+    \        code: # Pythonプログラムの文字列\n                outputs:  # 出力変数の定義(必須)\n  \
+    \                task_url:  # 変数名\n                    children: null\n      \
+    \              type: string  # 上記で定義された型のいずれかを指定\n                variables: \
+    \ # 入力変数の定義(必須)\n                  - value_selector:  # 他のノードからの入力\n         \
+    \           - [入力ノードID]\n                    - [変数名]\n                    variable:\
+    \ arg1  # 関数の引数名\n\n\n            - id: [IF/ELSEノードID]\n              data:\n\
+    \                type: if-else\n                title: 条件分岐\n                cases:\n\
+    \                  - case_id: 'true'\n                    logical_operator: and\n\
+    \                    conditions:\n                      - id: [条件ID]\n       \
+    \                 varType: [number/string/boolean]\n                        variable_selector:\n\
+    \                          - [入力ノードID]\n                          - [変数名]\n  \
+    \                      comparison_operator: [比較演算子]\n                        value:\
+    \ [比較値]\n                        numberVarType: [constant/variable]  # 数値型の場合\n\
+    \                      - id: [条件ID2]\n                        varType: [変数型]\n\
+    \                        key: [サブ変数キー]  # オプション\n                        comparison_operator:\
+    \ [比較演算子]\n                        value: [比較値]\n                        sub_variable_condition:\
+    \  # オプション\n                          case_id: [サブ条件ID]\n                    \
+    \      logical_operator: and\n                          conditions:\n        \
+    \                    - id: [サブ条件ID]\n                              varType: [変数型]\n\
+    \                              comparison_operator: [比較演算子]\n                \
+    \              value: [比較値]\n\n\n            - id: [Variable Aggregatorノード]\n\
+    \              data:\n                type: variable-aggregator\n            \
+    \    title: 変数集約器\n                output_type: string  # または number/boolean\n\
+    \                variables:\n                  - - [入力ノードID1]\n              \
+    \      - [変数名1]\n                  - - [入力ノードID2]\n                    - [変数名2]\n\
+    \      ```"
   prompt_type: simple
   retriever_resource:
     enabled: true
