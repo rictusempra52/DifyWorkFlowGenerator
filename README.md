@@ -14,7 +14,7 @@
   - JSONパース
   - IF/ELSEノード
   - codeノード
-
+  - Variable Aggregatorノード
 
 ## ファイルの内容
 
@@ -73,9 +73,7 @@ https://github.com/Tomatio13/DifyWorkFlowGenerator.git
 - 知識検索ノード：データセットからの情報検索
 - IF/ELSEノード：条件分岐
 - codeノード：Pythonコードの実行
-
-*注意事項*: 
-HTTPリクエストノードとJSONパースノード入れてますが、プロンプトでの指定の仕方が判ってません。
+- Variable Aggregatorノード：複数ノードからの出力を集約
 
 ## ワークフロー例
 
@@ -90,9 +88,22 @@ HTTPリクエストノードとJSONパースノード入れてますが、プロ
                   → 知識検索 → LLM → 終了
 ```
 
+### IF/ELSE分岐フロー
+```yaml
+開始 → IF/ELSE → LLM(True) → 終了
+             → LLM(False) → 終了
+```
+
+### 変数集約フロー
+```yaml
+開始 → LLM1 → Variable Aggregator → 終了
+    → LLM2 ↗
+```
+
 ## 制限事項
 
 - OpenAIのgpt-4oモデルのみサポート(変更は、Difyの画面上でモデル設定して下さい。)
+- codeノードでのboolean型の使用不可（number型で0/1を使用）
 
 ## ライセンス
 
