@@ -59,6 +59,11 @@ https://github.com/Tomatio13/DifyWorkFlowGenerator.git
 6. 以下は、example/manual_search.ymlをインポートした画面です。
 ![Dify ワークフロージェネレーター](./images/manual_search.jpg)
 
+## サンプル
+example/adoviser_bot.yml
+  - 質問分類器、知識検索、IF/ELSE分岐、テンプレート変換、パラメータ抽出を利用したワークフロー
+![ワークフローの画像](./images/adoviser_bot.png)
+
 ## サポートされるノードタイプ
 
 ### 基本ノード
