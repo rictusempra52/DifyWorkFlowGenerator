@@ -162,6 +162,7 @@ prompt:
               - provider_name: json_process
               - provider_type: builtin
               - title: JSON Parse
+              - tool_label: JSON Parse
               - tool_configurations:
                   ensure_ascii: 1
               - tool_name: parse
@@ -451,6 +452,7 @@ prompt:
            - provider_name: json_process（固定）
            - provider_type: builtin（固定）
            - title: ノードのタイトル（必須）
+           - tool_label: JSON Parse（固定）
            - tool_configurations:（必須）
              - ensure_ascii: 1または0（必須）
            - tool_name: parse（固定）
@@ -918,6 +920,7 @@ prompt:
                 provider_type: builtin
                 selected: false
                 title: JSON Parse
+                tool_label: JSON Parse
                 tool_configurations:
                   ensure_ascii: 1
                 tool_label: JSON Parse
