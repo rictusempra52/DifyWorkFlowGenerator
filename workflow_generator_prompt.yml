@@ -162,7 +162,6 @@ prompt:
               - provider_name: json_process
               - provider_type: builtin
               - title: JSON Parse
-              - tool_label: JSON Parse
               - tool_configurations:
                   ensure_ascii: 1
               - tool_name: parse
@@ -288,6 +287,21 @@ prompt:
               - variable_selector:
                 - [入力ノードID]
                 - [変数名]
+
+          template_transform_node:
+            - id: ユニークなID
+            - type: template-transform
+            - data:
+                title: テンプレート変換
+                template: テンプレート文字列（Jinja2形式）
+                variables:
+                  - value_selector:  # 入力変数の指定
+                    - [入力ノードID]
+                    - [変数名]
+                    variable: [テンプレート内で使用する変数名]
+                outputs:
+                  output:  # 固定の出力変数名
+                    type: string  # 常にstring型
 
     usage_guide: |
       ワークフローの使用方法：
@@ -452,7 +466,6 @@ prompt:
            - provider_name: json_process（固定）
            - provider_type: builtin（固定）
            - title: ノードのタイトル（必須）
-           - tool_label: JSON Parse（固定）
            - tool_configurations:（必須）
              - ensure_ascii: 1または0（必須）
            - tool_name: parse（固定）
@@ -656,7 +669,7 @@ prompt:
           - 戻り値は辞書形式（必須）
           - ダブルクォートでコード全体を括る
           - 内部のダブルクォートはエスケープ
-
+          - 改行は\nで表現
           実装例:
           ```python
           def main(arg1: str) -> dict:
@@ -798,6 +811,56 @@ prompt:
               - [入力ノードID]
               - [変数名]
 
+      12. Template Transformノード
+          ユースケース:
+          - テンプレート文字列への変数埋め込み
+          - 動的なメッセージ生成
+          - 条件付きテキスト生成
+          - 配列データの文字列化
+
+          構造:
+          - id: ユニークなID（必須）
+          - type: template-transform（固定）
+          - data:
+              title: ノードのタイトル（必須）
+              template: Jinja2形式のテンプレート（必須）
+              variables: 入力変数の配列（必須）
+                - value_selector: 変数の参照元
+                  - [入力ノードID]
+                  - [変数名]
+                  variable: テンプレート内で使用する変数名
+
+          テンプレート構文:
+          - 変数参照: 
+            - 基本形: {{ 変数名 }}
+            - フィルター使用: {{ 変数名|upper }}
+          - 条件分岐:
+            ```
+            {% if 条件 %}
+              条件成立時の文字列
+            {% else %}
+              条件不成立時の文字列
+            {% endif %}
+            ```
+          - ループ処理:
+            ```
+            {% for item in items %}
+              {{ item }}
+            {% endfor %}
+            ```
+
+          入力変数の型:
+          - string: 文字列
+          - number: 数値
+          - object: オブジェクト
+          - array: 配列
+          - arrayNumber: 数値配列
+          - arrayString: 文字列配列
+          - arrayObject: オブジェクト配列
+
+          出力:
+          - output: 生成された文字列（string型固定）
+
     output_format: |
       生成されるYAMLファイルは以下の形式に従ってください：
       ```yaml
@@ -920,7 +983,6 @@ prompt:
                 provider_type: builtin
                 selected: false
                 title: JSON Parse
-                tool_label: JSON Parse
                 tool_configurations:
                   ensure_ascii: 1
                 tool_label: JSON Parse
@@ -1038,4 +1100,25 @@ prompt:
                 variable_selector:
                   - [入力ノードID]
                   - [変数名]
+            - id: [テンプレートノードID]
+              data:
+                type: template-transform
+                title: テンプレート変換
+                template: |
+                  こんにちは、{{ user_name }}さん！
+                  あなたの得点は{{ score }}点です。
+                  {% if score >= 80 %}
+                  合格です！おめでとうございます。
+                  {% else %}
+                  残念ながら不合格です。
+                  {% endif %}
+                variables:
+                  - value_selector:
+                      - [入力ノードID]
+                      - user_name
+                    variable: user_name
+                  - value_selector:
+                      - [入力ノードID]
+                      - score
+                    variable: score
       ```
