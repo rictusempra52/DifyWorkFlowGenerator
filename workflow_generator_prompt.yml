@@ -68,6 +68,18 @@ prompt:
             - id: ユニークなID
             - type: start
             - variables:
+              # ファイル入力の例
+              - type: file
+                variable: input_document
+                label: ドキュメント
+                required: true
+                max_length: 48
+                allowed_file_types:
+                  - document
+                allowed_file_upload_methods:
+                  - local_file
+                  - remote_url
+
               # 数値入力の例
               - type: number
                 variable: input_number
@@ -266,6 +278,16 @@ prompt:
                 - - [入力ノードID2]
                   - [変数名2]
 
+          document_extractor_node:
+            - id: ユニークなID
+            - type: document-extractor
+            - data:
+              - title: テキスト抽出ツール
+              - is_array_file: false
+              - variable_selector:
+                - [入力ノードID]
+                - [変数名]
+
     usage_guide: |
       ワークフローの使用方法：
       1. 開始ノード
@@ -285,6 +307,17 @@ prompt:
            - その他設定（型に応じて必要）
 
          変数型と固有設定:
+         - file（ファイル入力）:
+           - allowed_file_types: 許可するファイルタイプ
+             - document: ドキュメントファイル
+             - image: 画像ファイル
+             - audio: 音声ファイル
+             - video: 動画ファイル
+           - allowed_file_upload_methods: アップロード方法
+             - local_file: ローカルファイル
+             - remote_url: リモートURL
+           - max_length: 最大ファイル名長
+           - required: 必須項目かどうか
          - number（数値入力）:
            - min: 最小値（オプション）
            - max: 最大値（オプション）
@@ -516,7 +549,7 @@ prompt:
              - weights:（必須）
                - vector_setting:（必須）
                  - embedding_model_name: モデル名（必須）
-                 - embedding_provider_name: プロバイダー名（��須）
+                 - embedding_provider_name: プロバイダー名（須）
                  - vector_weight: ベクトル重み（必須）
                - keyword_setting:（必須）
                  - keyword_weight: キーワード重み（必須）
@@ -654,7 +687,7 @@ prompt:
                 - comparison_operator: 比較演算子（必須）
                 - value: 比較値（必須）
                 - numberVarType: 数値比較タイプ（数値型の場合必須）
-                - key: サブ変数のキー（オプショ��）
+                - key: サブ変数のキー（オプション）
                 - sub_variable_condition: サブ変数の条件（オプション）
 
           特記事項:
@@ -747,6 +780,22 @@ prompt:
             - string: "true"/"false"のみ許可
             - number: 0以外はtrue
 
+      11. Document Extractorノード
+          ユースケース:
+          - ドキュメントからのテキスト抽出
+          - ファイル内容の解析
+          - テキストデータの前処理
+
+          構造:
+          - id: ユニークなID（必須）
+          - type: document-extractor（固定）
+          - data:
+            - title: ノードのタイトル（必須）
+            - is_array_file: 配列入力かどうか（必須）
+            - variable_selector: 入力変数の指定（必須）
+              - [入力ノードID]
+              - [変数名]
+
     output_format: |
       生成されるYAMLファイルは以下の形式に従ってください：
       ```yaml
@@ -778,6 +827,19 @@ prompt:
                 type: start
                 title: 開始
                 variables:
+                  # ファイル入力の例
+                  - type: file
+                    variable: input_document
+                    label: ドキュメント
+                    required: true
+                    max_length: 48
+                    allowed_file_types:
+                      - document
+                    allowed_file_upload_methods:
+                      - local_file
+                      - remote_url
+
+                  # その他の入力タイプ
                   - type: text-input
                     variable: [変数名]
                     type: string/number
@@ -964,4 +1026,13 @@ prompt:
                     - [変数名1]
                   - - [入力ノードID2]
                     - [変数名2]
+
+            - id: [Document ExtractorノードID]
+              data:
+                type: document-extractor
+                title: テキスト抽出ツール
+                is_array_file: false
+                variable_selector:
+                  - [入力ノードID]
+                  - [変数名]
       ```

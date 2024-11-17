@@ -63,6 +63,9 @@ https://github.com/Tomatio13/DifyWorkFlowGenerator.git
 
 ### 基本ノード
 - 開始ノード：ユーザー入力の受付
+  - テキスト入力（短文・段落）
+  - 数値入力
+  - ファイル入力（ドキュメント、画像、音声、動画）
 - LLMノード：OpenAI GPT-4による処理
 - 終了ノード：結果の出力
 
@@ -74,6 +77,7 @@ https://github.com/Tomatio13/DifyWorkFlowGenerator.git
 - IF/ELSEノード：条件分岐
 - codeノード：Pythonコードの実行
 - Variable Aggregatorノード：複数ノードからの出力を集約
+- Document Extractorノード：ドキュメントからのテキスト抽出
 
 ## ワークフロー例
 
@@ -100,10 +104,20 @@ https://github.com/Tomatio13/DifyWorkFlowGenerator.git
     → LLM2 ↗
 ```
 
+### ドキュメント処理フロー
+```yaml
+開始(ファイル入力) → Document Extractor → LLM → 終了
+```
+
 ## 制限事項
 
 - OpenAIのgpt-4oモデルのみサポート(変更は、Difyの画面上でモデル設定して下さい。)
 - codeノードでのboolean型の使用不可（number型で0/1を使用）
+- ファイル入力は以下の形式のみサポート：
+  - ドキュメント（PDF、Word等）
+  - 画像（JPG、PNG等）
+  - 音声（MP3、WAV等）
+  - 動画（MP4等）
 
 ## ライセンス
 
