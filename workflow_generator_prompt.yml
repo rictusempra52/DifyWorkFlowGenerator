@@ -311,6 +311,40 @@ prompt:
                 answer: 応答テキストまたは変数参照
                 variables: []  # 必要に応じて変数定義
 
+          parameter_extractor_node:
+            - id: ユニークなID（必須）
+            - type: parameter-extractor（固定）
+            - data:
+              - title: パラメータ抽出
+              - query: # 入力変数の指定（必須）
+                - [入力ノードID]
+                - [変数名]
+              - model: # モデル設定（必須）
+                - provider: プロバイダー名
+                - name: モデル名
+                - mode: chat/completion
+                - completion_params:
+                  - temperature: 0.0-1.0
+              - reasoning_mode: # 推論モード（必須）
+                - prompt: プロンプトベース
+                - function_call: 関数呼び出し
+              - parameters: # 抽出パラメータ定義（必須）
+                - name: パラメータ名
+                  type: パラメータ型
+                  description: 説明文
+                  required: true/false
+                  options: # select型の場合の選択肢
+                    - オプション1
+                    - オプション2
+              - instruction: プロンプト文字列
+              - memory: # メモリ設定（オプション）
+                - role_prefix:
+                  - user: ユーザープレフィックス
+                  - assistant: アシスタントプレフィックス
+              - vision: # 画像処理設定（オプション）
+                - enabled: true/false
+                - configs: 画像設定
+
     usage_guide: |
       ワークフローの使用方法：
       1. 開始ノード
@@ -906,6 +940,54 @@ prompt:
             - 後段: 全てのノードタイプに接続可能
             - チャットモードでの特別な動作あり
 
+      16. パラメータ抽出ノード
+          ユースケース:
+          - テキストからの構造化データ抽出
+          - ユーザー入力の解析
+          - 情報の分類と整理
+          - 条件分岐のための入力解析
+
+          構造:
+          - id: ユニークなID（必須）
+          - type: parameter-extractor（固定）
+          - data:
+            - title: ノードのタイトル（必須）
+            - query: 入力変数の指定（必須）
+            - model: モデル設定（必須）
+            - reasoning_mode: 推論モード（必須）
+            - parameters: パラメータ定義（必須）
+            - instruction: プロンプト（必須）
+            - memory: メモリ設定（オプション）
+            - vision: 画像処理設定（オプション）
+
+          パラメータ型:
+          - string: 文字列型
+          - number: 数値型
+          - bool: 真偽値型
+          - select: 選択型（options必須）
+          - array[string]: 文字列配列型
+          - array[number]: 数値配列型
+          - array[object]: オブジェクト配列型
+
+          推論モード:
+          - prompt: 
+            - プロンプトベースの抽出
+            - 柔軟な抽出ルール定義可能
+          - function_call:
+            - 関数呼び出しベース
+            - より構造化された抽出
+
+          出力変数:
+          - [パラメータ名]: 各パラメータの抽出結果
+          - __is_success: 抽出成功フラグ（0/1）
+          - __reason: エラー理由（エラー時）
+
+          特記事項:
+          - パラメータ名は一意である必要がある
+          - 必須パラメータは抽出必須
+          - プロンプトは抽出ルールを明確に記述
+          - 画像処理は対応モデルのみ使用可能
+
     output_format: |
       生成されるYAMLファイルは以下の形式に従ってください：
       ```yaml
@@ -1173,4 +1255,35 @@ prompt:
                 answer: |
                   {{#[LLMノードID].text#}}
                 variables: []
+            - id: [パラメータ抽出ノードID]
+              data:
+                type: parameter-extractor
+                title: パラメータ抽出
+                query:
+                  - [入力ノードID]
+                  - [変数名]
+                model:
+                  provider: [プロバイダー名]
+                  name: [モデル名]
+                  mode: chat
+                  completion_params:
+                    temperature: 0.7
+                reasoning_mode: prompt
+                parameters:
+                  - name: [パラメータ名]
+                    type: string/number/bool/select/array[string]/array[number]/array[object]
+                    description: [説明文]
+                    required: true/false
+                    options: # select型の場合のみ
+                      - [オプション1]
+                      - [オプション2]
+                instruction: |
+                  [プロンプト文字列]
+                memory:
+                  role_prefix:
+                    user: [ユーザープレフィックス]
+                    assistant: [アシスタントプレフィックス]
+                vision:
+                  enabled: false
+                  configs: {}
       ```

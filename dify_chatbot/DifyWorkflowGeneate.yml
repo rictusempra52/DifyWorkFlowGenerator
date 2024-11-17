@@ -185,30 +185,45 @@ model_config:
     \  output:  # 固定の出力変数名\n                    type: string  # 常にstring型\n\n\n  \
     \        answer_node:\n            - id: ユニークなID\n            - type: answer\n\
     \            - data:\n                title: 応答ノード\n                answer: 応答テキストまたは変数参照\n\
-    \                variables: []  # 必要に応じて変数定義\n\n\n    usage_guide: |\n      ワークフローの使用方法：\n\
-    \      1. 開始ノード\n         ユースケース:\n         - ワークフローの開始点として機能\n         - ユーザーからの入力を受け付け\n\
-    \         - 入力された情報を変数として保存\n\n\n         構造:\n         - id: ユニークなID（必須）\n  \
-    \       - type: start（固定）\n         - variables: 入力変数の配列（必須）\n           - type:\
-    \ 変数の型（必須）\n           - variable: 変数名（必須）\n           - label: 表示ラベル（必須）\n  \
-    \         - required: 必須入力かどうか（必須）\n           - その他設定（型に応じて必要）\n\n\n        \
-    \ 変数型と固有設定:\n         - file（ファイル入力）:\n           - allowed_file_types: 許可するファイルタイプ\n\
-    \             - document: ドキュメントファイル\n             - image: 画像ファイル\n         \
-    \    - audio: 音声ファイル\n             - video: 動画ファイル\n           - allowed_file_upload_methods:\
-    \ アップロード方法\n             - local_file: ローカルファイル\n             - remote_url: リモートURL\n\
-    \           - max_length: 最大ファイル名長\n           - required: 必須項目かどうか\n        \
-    \ - number（数値入力）:\n           - min: 最小値（オプション）\n           - max: 最大値（オプション）\n\
-    \         - paragraph（段落テキスト）:\n           - max_length: 最大文字数（オプション）\n      \
-    \     - options: 選択肢（オプション）\n         - text-input（短文テキスト）:\n           - max_length:\
-    \ 最大文字数（オプション）\n           - options: 選択肢（オプション）\n\n\n      2. LLMノード\n      \
-    \   ユースケース:\n         - テキスト生成や応答の作成\n         - 入力テキストの加工や変換\n         - 質問への回答生成\n\
-    \         構造:\n         - id: ユニークなID（必須）\n         - type: llm（固定）\n        \
-    \ - model:（必須）\n           - provider: openai（固定）\n           - name: gpt-4o（固定）\n\
-    \           - mode: chat（固定）\n           - completion_params:\n             -\
-    \ temperature: 0.0-1.0の値（必須）\n         - prompt_template:（必須）\n           - role:\
-    \ system（固定）\n           - text: プロンプトテキスト（必須）\n         - context:（必須）\n    \
-    \       - enabled: true（固定）\n           - variable_selector: 使用する変数の指定（必須）\n \
-    \        - vision:\n           - enabled: false（固定）\n         特記事項:\n        \
-    \ - プロンプトはシングルクォートで括る必要あり\n         - システムロールのプロンプトのみ使用可能\n         - 変数参照形式:\
+    \                variables: []  # 必要に応じて変数定義\n\n\n          parameter_extractor_node:\n\
+    \            - id: ユニークなID（必須）\n            - type: parameter-extractor（固定）\n\
+    \            - data:\n              - title: パラメータ抽出\n              - query: #\
+    \ 入力変数の指定（必須）\n                - [入力ノードID]\n                - [変数名]\n        \
+    \      - model: # モデル設定（必須）\n                - provider: プロバイダー名\n           \
+    \     - name: モデル名\n                - mode: chat/completion\n                -\
+    \ completion_params:\n                  - temperature: 0.0-1.0\n             \
+    \ - reasoning_mode: # 推論モード（必須）\n                - prompt: プロンプトベース\n        \
+    \        - function_call: 関数呼び出し\n              - parameters: # 抽出パラメータ定義（必須）\n\
+    \                - name: パラメータ名\n                  type: パラメータ型\n            \
+    \      description: 説明文\n                  required: true/false\n            \
+    \      options: # select型の場合の選択肢\n                    - オプション1\n             \
+    \       - オプション2\n              - instruction: プロンプト文字列\n              - memory:\
+    \ # メモリ設定（オプション）\n                - role_prefix:\n                  - user: ユーザープレフィックス\n\
+    \                  - assistant: アシスタントプレフィックス\n              - vision: # 画像処理設定（オプション）\n\
+    \                - enabled: true/false\n                - configs: 画像設定\n\n\n\
+    \    usage_guide: |\n      ワークフローの使用方法：\n      1. 開始ノード\n         ユースケース:\n  \
+    \       - ワークフローの開始点として機能\n         - ユーザーからの入力を受け付け\n         - 入力された情報を変数として保存\n\
+    \n\n         構造:\n         - id: ユニークなID（必須）\n         - type: start（固定）\n   \
+    \      - variables: 入力変数の配列（必須）\n           - type: 変数の型（必須）\n           - variable:\
+    \ 変数名（必須）\n           - label: 表示ラベル（必須）\n           - required: 必須入力かどうか（必須）\n\
+    \           - その他設定（型に応じて必要）\n\n\n         変数型と固有設定:\n         - file（ファイル入力）:\n\
+    \           - allowed_file_types: 許可するファイルタイプ\n             - document: ドキュメントファイル\n\
+    \             - image: 画像ファイル\n             - audio: 音声ファイル\n             - video:\
+    \ 動画ファイル\n           - allowed_file_upload_methods: アップロード方法\n             - local_file:\
+    \ ローカルファイル\n             - remote_url: リモートURL\n           - max_length: 最大ファイル名長\n\
+    \           - required: 必須項目かどうか\n         - number（数値入力）:\n           - min:\
+    \ 最小値（オプション）\n           - max: 最大値（オプション）\n         - paragraph（段落テキスト）:\n  \
+    \         - max_length: 最大文字数（オプション）\n           - options: 選択肢（オプション）\n     \
+    \    - text-input（短文テキスト）:\n           - max_length: 最大文字数（オプション）\n          \
+    \ - options: 選択肢（オプション）\n\n\n      2. LLMノード\n         ユースケース:\n         - テキスト生成や応答の作成\n\
+    \         - 入力テキストの加工や変換\n         - 質問への回答生成\n         構造:\n         - id: ユニークなID（必須）\n\
+    \         - type: llm（固定）\n         - model:（必須）\n           - provider: openai（固定）\n\
+    \           - name: gpt-4o（固定）\n           - mode: chat（固定）\n           - completion_params:\n\
+    \             - temperature: 0.0-1.0の値（必須）\n         - prompt_template:（必須）\n\
+    \           - role: system（固定）\n           - text: プロンプトテキスト（必須）\n         - context:（必須）\n\
+    \           - enabled: true（固定）\n           - variable_selector: 使用する変数の指定（必須）\n\
+    \         - vision:\n           - enabled: false（固定）\n         特記事項:\n       \
+    \  - プロンプトはシングルクォートで括る必要あり\n         - システムロールのプロンプトのみ使用可能\n         - 変数参照形式:\
     \ {{#ノードID.変数名#}}\n         \n      3. 終了ノード\n         ユースケース:\n         - ワークフローの終了点として機能\n\
     \         - 処理結果の出力を定義\n         - 後続システムへのデータ受け渡し\n\n\n         構造:\n       \
     \  - id: ユニークなID（必須）\n         - type: end（固定）\n         - outputs:（必須）\n    \
@@ -386,64 +401,80 @@ model_config:
     \    - object: オブジェクト\n            - array: 配列\n            - arrayString: 文字列配列\n\
     \            - arrayNumber: 数値配列\n            ※ arrayObjectは非対応\n\n\n        \
     \  - 接続:\n            - 前段: 全てのノードタイプから接続可能\n            - 後段: 全てのノードタイプに接続可能\n\
-    \            - チャットモードでの特別な動作あり\n\n\n    output_format: |\n      生成されるYAMLファイルは以下の形式に従ってください：\n\
-    \      ```yaml\n      app:\n        mode: workflow\n        name: [ワークフロー名]\n\
-    \        version: 0.1.3\n\n\n      workflow:\n        graph:\n          edges:\n\
-    \            # IF/ELSE分岐のエッジ例\n            - source: [IF/ELSEノードID]\n        \
-    \      target: [ターゲットノードID]\n              data:\n                sourceType:\
-    \ if-else\n                targetType: [ターゲットノードタイプ]\n              sourceHandle:\
-    \ 'true'  # IF条件成立時\n            - source: [IF/ELSEノードID]\n              target:\
-    \ [別のターゲットノードID]\n              data:\n                sourceType: if-else\n \
-    \               targetType: [ターゲットノードタイプ]\n              sourceHandle: 'false'\
-    \  # ELSE条件時\n\n\n          nodes:\n            - id: [開始ノードID]\n            \
-    \  data:\n                type: start\n                title: 開始\n           \
-    \     variables:\n                  # ファイル入力の例\n                  - type: file\n\
-    \                    variable: input_document\n                    label: ドキュメント\n\
-    \                    required: true\n                    max_length: 48\n    \
-    \                allowed_file_types:\n                      - document\n     \
-    \               allowed_file_upload_methods:\n                      - local_file\n\
-    \                      - remote_url\n\n\n                  # その他の入力タイプ\n     \
-    \             - type: text-input\n                    variable: [変数名]\n      \
-    \              type: string/number\n                    label: [入力フィールドのラベル]\n\
-    \                    required: true\n                    max_length: [最大文字数]\n\
-    \n\n            - id: [LLMノードID]\n              data:\n                type: llm\n\
-    \                title: LLM\n                model:\n                  provider:\
-    \ openai\n                  name: gpt-4o\n                  mode: chat\n     \
-    \             completion_params:\n                    temperature: 0.7\n     \
-    \           prompt_template:\n                  - id: [プロンプトID]\n            \
-    \        role: system\n                    text: '[プロンプトテキスト]'\n             \
-    \   context:\n                  enabled: true\n                  variable_selector:\n\
-    \                    - [開始ノードID]\n                    - [変数名]\n              \
-    \  vision:\n                  enabled: false\n            - id: [終了ノードID]\n  \
-    \            data:\n                type: end\n                title: 終了\n   \
-    \             outputs:\n                  - value_selector:\n                \
-    \      - [開始ノードID]\n                      - [変数名]\n                    variable:\
-    \ inputData\n                  - value_selector:\n                      - [LLMノードID]\n\
-    \                      - text\n                    variable: generatedText\n\n\
-    \n            - id: [HTTPリクエストノードID]\n              data:\n                type:\
-    \ http-request\n                authorization:\n                  config: null\n\
-    \                  type: no-auth  # または必要な認証タイプ\n                body:\n     \
-    \             type: json\n                  data:\n                    - id: [キーバリューID]\n\
-    \                      key: ''\n                      type: text\n           \
-    \           value: |\n                        {\n                          \"\
-    key1\": \"{{#[開始ノードID].[変数名]#}}\",\n                          \"key2\": \"値2\"\
-    \n                        }\n                headers: Content-Type:application/json\n\
-    \                method: post\n                url: [APIエンドポイントURL]\n        \
-    \        timeout:\n                  max_connect_timeout: 0\n                \
-    \  max_read_timeout: 0\n                  max_write_timeout: 0\n             \
-    \   title: HTTPリクエスト\n                variables: []\n\n\n            - id: [JSONパースノードID]\n\
-    \              data:\n                type: tool\n                desc: ''\n \
-    \               provider_id: json_process\n                provider_name: json_process\n\
-    \                provider_type: builtin\n                selected: false\n   \
-    \             title: JSON Parse\n                tool_configurations:\n      \
-    \            ensure_ascii: 1\n                tool_label: JSON Parse\n       \
-    \         tool_name: parse\n                tool_parameters:\n               \
-    \   content:\n                    type: mixed\n                    value: '{{#[入力ノードID].[変数名]#}}'\n\
-    \                  json_filter:\n                    type: mixed\n           \
-    \         value: [抽出したいJSONキー]\n\n\n            - id: [質問分類器ノードID]\n         \
-    \     data:\n                type: question-classifier\n                title:\
-    \ 質問分類器\n                model:\n                  provider: openai\n        \
-    \          name: gpt-4o\n                  mode: chat\n                  completion_params:\n\
+    \            - チャットモードでの特別な動作あり\n\n\n      16. パラメータ抽出ノード\n          ユースケース:\n\
+    \          - テキストからの構造化データ抽出\n          - ユーザー入力の解析\n          - 情報の分類と整理\n  \
+    \        - 条件分岐のための入力解析\n\n\n          構造:\n          - id: ユニークなID（必須）\n    \
+    \      - type: parameter-extractor（固定）\n          - data:\n            - title:\
+    \ ノードのタイトル（必須）\n            - query: 入力変数の指定（必須）\n            - model: モデル設定（必須）\n\
+    \            - reasoning_mode: 推論モード（必須）\n            - parameters: パラメータ定義（必須）\n\
+    \            - instruction: プロンプト（必須）\n            - memory: メモリ設定（オプション）\n  \
+    \          - vision: 画像処理設定（オプション）\n\n\n          パラメータ型:\n          - string:\
+    \ 文字列型\n          - number: 数値型\n          - bool: 真偽値型\n          - select: 選択型（options必須）\n\
+    \          - array[string]: 文字列配列型\n          - array[number]: 数値配列型\n       \
+    \   - array[object]: オブジェクト配列型\n\n\n          推論モード:\n          - prompt: \n \
+    \           - プロンプトベースの抽出\n            - 柔軟な抽出ルール定義可能\n          - function_call:\n\
+    \            - 関数呼び出しベース\n            - より構造化された抽出\n\n\n          出力変数:\n    \
+    \      - [パラメータ名]: 各パラメータの抽出結果\n          - __is_success: 抽出成功フラグ（0/1）\n     \
+    \     - __reason: エラー理由（エラー時）\n\n\n          特記事項:\n          - パラメータ名は一意である必要がある\n\
+    \          - 必須パラメータは抽出必須\n          - プロンプトは抽出ルールを明確に記述\n          - 画像処理は対応モデルのみ使用可能\n\
+    \n\n    output_format: |\n      生成されるYAMLファイルは以下の形式に従ってください：\n      ```yaml\n\
+    \      app:\n        mode: workflow\n        name: [ワークフロー名]\n        version:\
+    \ 0.1.3\n\n\n      workflow:\n        graph:\n          edges:\n            #\
+    \ IF/ELSE分岐のエッジ例\n            - source: [IF/ELSEノードID]\n              target:\
+    \ [ターゲットノードID]\n              data:\n                sourceType: if-else\n   \
+    \             targetType: [ターゲットノードタイプ]\n              sourceHandle: 'true'  #\
+    \ IF条件成立時\n            - source: [IF/ELSEノードID]\n              target: [別のターゲットノードID]\n\
+    \              data:\n                sourceType: if-else\n                targetType:\
+    \ [ターゲットノードタイプ]\n              sourceHandle: 'false'  # ELSE条件時\n\n\n        \
+    \  nodes:\n            - id: [開始ノードID]\n              data:\n                type:\
+    \ start\n                title: 開始\n                variables:\n             \
+    \     # ファイル入力の例\n                  - type: file\n                    variable:\
+    \ input_document\n                    label: ドキュメント\n                    required:\
+    \ true\n                    max_length: 48\n                    allowed_file_types:\n\
+    \                      - document\n                    allowed_file_upload_methods:\n\
+    \                      - local_file\n                      - remote_url\n\n\n\
+    \                  # その他の入力タイプ\n                  - type: text-input\n       \
+    \             variable: [変数名]\n                    type: string/number\n     \
+    \               label: [入力フィールドのラベル]\n                    required: true\n   \
+    \                 max_length: [最大文字数]\n\n\n            - id: [LLMノードID]\n    \
+    \          data:\n                type: llm\n                title: LLM\n    \
+    \            model:\n                  provider: openai\n                  name:\
+    \ gpt-4o\n                  mode: chat\n                  completion_params:\n\
+    \                    temperature: 0.7\n                prompt_template:\n    \
+    \              - id: [プロンプトID]\n                    role: system\n           \
+    \         text: '[プロンプトテキスト]'\n                context:\n                  enabled:\
+    \ true\n                  variable_selector:\n                    - [開始ノードID]\n\
+    \                    - [変数名]\n                vision:\n                  enabled:\
+    \ false\n            - id: [終了ノードID]\n              data:\n                type:\
+    \ end\n                title: 終了\n                outputs:\n                 \
+    \ - value_selector:\n                      - [開始ノードID]\n                     \
+    \ - [変数名]\n                    variable: inputData\n                  - value_selector:\n\
+    \                      - [LLMノードID]\n                      - text\n          \
+    \          variable: generatedText\n\n\n            - id: [HTTPリクエストノードID]\n \
+    \             data:\n                type: http-request\n                authorization:\n\
+    \                  config: null\n                  type: no-auth  # または必要な認証タイプ\n\
+    \                body:\n                  type: json\n                  data:\n\
+    \                    - id: [キーバリューID]\n                      key: ''\n       \
+    \               type: text\n                      value: |\n                 \
+    \       {\n                          \"key1\": \"{{#[開始ノードID].[変数名]#}}\",\n  \
+    \                        \"key2\": \"値2\"\n                        }\n       \
+    \         headers: Content-Type:application/json\n                method: post\n\
+    \                url: [APIエンドポイントURL]\n                timeout:\n            \
+    \      max_connect_timeout: 0\n                  max_read_timeout: 0\n       \
+    \           max_write_timeout: 0\n                title: HTTPリクエスト\n         \
+    \       variables: []\n\n\n            - id: [JSONパースノードID]\n              data:\n\
+    \                type: tool\n                desc: ''\n                provider_id:\
+    \ json_process\n                provider_name: json_process\n                provider_type:\
+    \ builtin\n                selected: false\n                title: JSON Parse\n\
+    \                tool_configurations:\n                  ensure_ascii: 1\n   \
+    \             tool_label: JSON Parse\n                tool_name: parse\n     \
+    \           tool_parameters:\n                  content:\n                   \
+    \ type: mixed\n                    value: '{{#[入力ノードID].[変数名]#}}'\n          \
+    \        json_filter:\n                    type: mixed\n                    value:\
+    \ [抽出したいJSONキー]\n\n\n            - id: [質問分類器ノードID]\n              data:\n   \
+    \             type: question-classifier\n                title: 質問分類器\n      \
+    \          model:\n                  provider: openai\n                  name:\
+    \ gpt-4o\n                  mode: chat\n                  completion_params:\n\
     \                    temperature: 0.7\n                query_variable_selector:\n\
     \                  - [入力ノードID]\n                  - [変数名]\n                classes:\n\
     \                  - id: '1'\n                    name: [分類名1]\n             \
@@ -499,7 +530,21 @@ model_config:
     \                  - score\n                    variable: score\n            -\
     \ id: [応答ノードID]\n              data:\n                type: answer\n         \
     \       title: 応答出力\n                answer: |\n                  {{#[LLMノードID].text#}}\n\
-    \                variables: []\n      ```"
+    \                variables: []\n            - id: [パラメータ抽出ノードID]\n           \
+    \   data:\n                type: parameter-extractor\n                title: パラメータ抽出\n\
+    \                query:\n                  - [入力ノードID]\n                  - [変数名]\n\
+    \                model:\n                  provider: [プロバイダー名]\n             \
+    \     name: [モデル名]\n                  mode: chat\n                  completion_params:\n\
+    \                    temperature: 0.7\n                reasoning_mode: prompt\n\
+    \                parameters:\n                  - name: [パラメータ名]\n           \
+    \         type: string/number/bool/select/array[string]/array[number]/array[object]\n\
+    \                    description: [説明文]\n                    required: true/false\n\
+    \                    options: # select型の場合のみ\n                      - [オプション1]\n\
+    \                      - [オプション2]\n                instruction: |\n          \
+    \        [プロンプト文字列]\n                memory:\n                  role_prefix:\n\
+    \                    user: [ユーザープレフィックス]\n                    assistant: [アシスタントプレフィックス]\n\
+    \                vision:\n                  enabled: false\n                 \
+    \ configs: {}\n      ```"
   prompt_type: simple
   retriever_resource:
     enabled: true

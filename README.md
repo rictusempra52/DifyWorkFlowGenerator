@@ -80,6 +80,7 @@ https://github.com/Tomatio13/DifyWorkFlowGenerator.git
 - Document Extractorノード：ドキュメントからのテキスト抽出
 - Template Transformノード：テンプレートベースの文字列生成
 - Answerノード：応答出力の制御
+- Parameter Extractorノード：テキストからのパラメータ抽出
 
 ## ワークフロー例
 
@@ -132,6 +133,16 @@ https://github.com/Tomatio13/DifyWorkFlowGenerator.git
     → LLM2 ↗
 ```
 
+### パラメータ抽出フロー
+```yaml
+開始 → Parameter Extractor → LLM → 終了
+```
+
+### 複合パラメータ処理フロー
+```yaml
+開始 → Parameter Extractor → Template Transform → Answer → 終了
+```
+
 ## 制限事項
 
 - OpenAIのgpt-4oモデルのみサポート(変更は、Difyの画面上でモデル設定して下さい。)
@@ -149,6 +160,16 @@ https://github.com/Tomatio13/DifyWorkFlowGenerator.git
   - arrayObject型の変数は非対応
   - チャットモードでの特別な動作に注意
   - 変数参照は{{#ノードID.変数名#}}形式のみ
+- Parameter Extractorノードの制約：
+  - パラメータ名は一意である必要がある
+  - 必須パラメータは抽出必須
+  - 画像処理は対応モデルのみ使用可能
+  - 推論モードはpromptまたはfunction_callのみ
+- 未対応のノード:
+  - イテレーションノード
+  - 変数代入ノード
+  - リスト処理
+  - ツールノード全般
 
 ## ライセンス
 
