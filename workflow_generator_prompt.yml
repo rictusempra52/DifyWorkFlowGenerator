@@ -303,6 +303,14 @@ prompt:
                   output:  # 固定の出力変数名
                     type: string  # 常にstring型
 
+          answer_node:
+            - id: ユニークなID
+            - type: answer
+            - data:
+                title: 応答ノード
+                answer: 応答テキストまたは変数参照
+                variables: []  # 必要に応じて変数定義
+
     usage_guide: |
       ワークフローの使用方法：
       1. 開始ノード
@@ -861,6 +869,43 @@ prompt:
           出力:
           - output: 生成された文字列（string型固定）
 
+      13. Answerノード
+          ユースケース:
+          - ワークフローの応答出力
+          - LLM出力の表示
+          - 変数値の表示
+          - 中間結果の確認
+
+          構造:
+          - id: ユニークなID（必須）
+          - type: answer（固定）
+          - data:
+              title: ノードのタイトル（必須）
+              answer: 応答テキスト（必須）
+                - 固定テキスト
+                - 変数参照: {{#ノードID.変数名#}}
+              variables: []  # オプション
+
+          特記事項:
+          - 変数参照:
+            - 形式: {{#ノードID.変数名#}}
+            - 複数の変数を組み合わせ可能
+            - システム変数も参照可能
+          
+          - 使用可能な変数型:
+            - string: 文字列
+            - number: 数値
+            - object: オブジェクト
+            - array: 配列
+            - arrayString: 文字列配列
+            - arrayNumber: 数値配列
+            ※ arrayObjectは非対応
+
+          - 接続:
+            - 前段: 全てのノードタイプから接続可能
+            - 後段: 全てのノードタイプに接続可能
+            - チャットモードでの特別な動作あり
+
     output_format: |
       生成されるYAMLファイルは以下の形式に従ってください：
       ```yaml
@@ -1121,4 +1166,11 @@ prompt:
                       - [入力ノードID]
                       - score
                     variable: score
+            - id: [応答ノードID]
+              data:
+                type: answer
+                title: 応答出力
+                answer: |
+                  {{#[LLMノードID].text#}}
+                variables: []
       ```

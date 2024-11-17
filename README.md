@@ -79,6 +79,7 @@ https://github.com/Tomatio13/DifyWorkFlowGenerator.git
 - Variable Aggregatorノード：複数ノードからの出力を集約
 - Document Extractorノード：ドキュメントからのテキスト抽出
 - Template Transformノード：テンプレートベースの文字列生成
+- Answerノード：応答出力の制御
 
 ## ワークフロー例
 
@@ -120,6 +121,17 @@ https://github.com/Tomatio13/DifyWorkFlowGenerator.git
 開始(ファイル) → Document Extractor → Template Transform → LLM → 終了
 ```
 
+### 応答制御フロー
+```yaml
+開始 → LLM → Answer → 終了
+```
+
+### 複合応答フロー
+```yaml
+開始 → LLM1 → Template Transform → Answer → 終了
+    → LLM2 ↗
+```
+
 ## 制限事項
 
 - OpenAIのgpt-4oモデルのみサポート(変更は、Difyの画面上でモデル設定して下さい。)
@@ -133,6 +145,10 @@ https://github.com/Tomatio13/DifyWorkFlowGenerator.git
   - 出力は常にstring型
   - Jinja2テンプレート構文のみサポート
   - 複雑な制御構文は非推奨
+- Answerノードの制約：
+  - arrayObject型の変数は非対応
+  - チャットモードでの特別な動作に注意
+  - 変数参照は{{#ノードID.変数名#}}形式のみ
 
 ## ライセンス
 
