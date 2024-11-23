@@ -201,8 +201,43 @@ model_config:
     \ # メモリ設定（オプション）\n                - role_prefix:\n                  - user: ユーザープレフィックス\n\
     \                  - assistant: アシスタントプレフィックス\n              - vision: # 画像処理設定（オプション）\n\
     \                - enabled: true/false\n                - configs: 画像設定\n\n\n\
-    \    usage_guide: |\n      ワークフローの使用方法：\n      1. 開始ノード\n         ユースケース:\n  \
-    \       - ワークフローの開始点として機能\n         - ユーザーからの入力を受け付け\n         - 入力された情報を変数として保存\n\
+    \          youtube_transcript_node:\n            - id: ユニークなID\n            -\
+    \ data:\n                type: tool\n                title: Free YouTube Transcript\
+    \ API\n                provider_name: transcript\n                provider_id:\
+    \ transcript\n                provider_type: builtin\n                tool_label:\
+    \ Free YouTube Transcript API\n                tool_name: free_youtube_transcript\n\
+    \                tool_configurations:\n                  cookies: null\n     \
+    \             format: text\n                  language: ja\n                 \
+    \ preserve_formatting: 0\n                  proxy: null\n                tool_parameters:\n\
+    \                  video_id:\n                    type: mixed\n              \
+    \      value: YouTubeビデオID or 変数参照\n                outputs:\n               \
+    \   text:  # 字幕テキストの出力変数\n                    type: string\n\n\n          jina_reader_node:\n\
+    \            - id: ユニークなID\n            - type: tool\n            - data:\n  \
+    \            - provider_id: jina\n              - provider_name: jina\n      \
+    \        - provider_type: builtin\n              - title: JinaReader\n       \
+    \       - tool_configurations:\n                  gather_all_images_at_the_end:\
+    \ 0  # 画像収集設定\n                  gather_all_links_at_the_end: 0   # リンク収集設定\n\
+    \                  image_caption: 0                 # 画像キャプション設定\n           \
+    \       no_cache: 0                      # キャッシュ無効化\n                  proxy_server:\
+    \ null               # プロキシサーバー設定\n                  summary: 0              \
+    \         # 要約機能\n                  target_selector: null            # ターゲット要素セレクター\n\
+    \                  wait_for_selector: null          # 待機要素セレクター\n            \
+    \  - tool_label: JinaReader\n              - tool_name: jina_reader\n        \
+    \      - tool_parameters:\n                  url:\n                    type: mixed\n\
+    \                    value: '{{#[入力ノードID].[変数名]#}}'  # URL入力\n\n\n          tavily_search_node:\n\
+    \            - id: ユニークなID\n            - type: tool\n            - data:\n  \
+    \            - provider_id: tavily\n              - provider_name: tavily\n  \
+    \            - provider_type: builtin\n              - title: TavilySearch\n \
+    \             - tool_configurations:\n                  exclude_domains: null\
+    \      # 除外ドメイン\n                  include_domains: null      # 含めるドメイン\n    \
+    \              include_answer: null       # 回答を含める\n                  include_images:\
+    \ null       # 画像を含める\n                  include_raw_content: null  # 生コンテンツを含める\n\
+    \                  max_results: 3             # 最大結果数\n                  search_depth:\
+    \ basic        # 検索深度\n              - tool_label: TavilySearch\n            \
+    \  - tool_name: tavily_search\n              - tool_parameters:\n            \
+    \      query:\n                    type: mixed\n                    value: '{{#[入力ノードID].[変数名]#}}'\n\
+    \n\n    usage_guide: |\n      ワークフローの使用方法：\n      1. 開始ノード\n         ユースケース:\n\
+    \         - ワークフローの開始点として機能\n         - ユーザーからの入力を受け付け\n         - 入力された情報を変数として保存\n\
     \n\n         構造:\n         - id: ユニークなID（必須）\n         - type: start（固定）\n   \
     \      - variables: 入力変数の配列（必須）\n           - type: 変数の型（必須）\n           - variable:\
     \ 変数名（必須）\n           - label: 表示ラベル（必須）\n           - required: 必須入力かどうか（必須）\n\
@@ -417,64 +452,123 @@ model_config:
     \      - [パラメータ名]: 各パラメータの抽出結果\n          - __is_success: 抽出成功フラグ（0/1）\n     \
     \     - __reason: エラー理由（エラー時）\n\n\n          特記事項:\n          - パラメータ名は一意である必要がある\n\
     \          - 必須パラメータは抽出必須\n          - プロンプトは抽出ルールを明確に記述\n          - 画像処理は対応モデルのみ使用可能\n\
-    \n\n    output_format: |\n      生成されるYAMLファイルは以下の形式に従ってください：\n      ```yaml\n\
-    \      app:\n        mode: workflow\n        name: [ワークフロー名]\n        version:\
-    \ 0.1.3\n\n\n      workflow:\n        graph:\n          edges:\n            #\
-    \ IF/ELSE分岐のエッジ例\n            - source: [IF/ELSEノードID]\n              target:\
-    \ [ターゲットノードID]\n              data:\n                sourceType: if-else\n   \
-    \             targetType: [ターゲットノードタイプ]\n              sourceHandle: 'true'  #\
-    \ IF条件成立時\n            - source: [IF/ELSEノードID]\n              target: [別のターゲットノードID]\n\
-    \              data:\n                sourceType: if-else\n                targetType:\
-    \ [ターゲットノードタイプ]\n              sourceHandle: 'false'  # ELSE条件時\n\n\n        \
-    \  nodes:\n            - id: [開始ノードID]\n              data:\n                type:\
-    \ start\n                title: 開始\n                variables:\n             \
-    \     # ファイル入力の例\n                  - type: file\n                    variable:\
-    \ input_document\n                    label: ドキュメント\n                    required:\
-    \ true\n                    max_length: 48\n                    allowed_file_types:\n\
-    \                      - document\n                    allowed_file_upload_methods:\n\
-    \                      - local_file\n                      - remote_url\n\n\n\
-    \                  # その他の入力タイプ\n                  - type: text-input\n       \
-    \             variable: [変数名]\n                    type: string/number\n     \
-    \               label: [入力フィールドのラベル]\n                    required: true\n   \
-    \                 max_length: [最大文字数]\n\n\n            - id: [LLMノードID]\n    \
-    \          data:\n                type: llm\n                title: LLM\n    \
-    \            model:\n                  provider: openai\n                  name:\
-    \ gpt-4o\n                  mode: chat\n                  completion_params:\n\
-    \                    temperature: 0.7\n                prompt_template:\n    \
-    \              - id: [プロンプトID]\n                    role: system\n           \
-    \         text: '[プロンプトテキスト]'\n                context:\n                  enabled:\
-    \ true\n                  variable_selector:\n                    - [開始ノードID]\n\
-    \                    - [変数名]\n                vision:\n                  enabled:\
-    \ false\n            - id: [終了ノードID]\n              data:\n                type:\
-    \ end\n                title: 終了\n                outputs:\n                 \
-    \ - value_selector:\n                      - [開始ノードID]\n                     \
-    \ - [変数名]\n                    variable: inputData\n                  - value_selector:\n\
-    \                      - [LLMノードID]\n                      - text\n          \
-    \          variable: generatedText\n\n\n            - id: [HTTPリクエストノードID]\n \
-    \             data:\n                type: http-request\n                authorization:\n\
-    \                  config: null\n                  type: no-auth  # または必要な認証タイプ\n\
-    \                body:\n                  type: json\n                  data:\n\
-    \                    - id: [キーバリューID]\n                      key: ''\n       \
-    \               type: text\n                      value: |\n                 \
-    \       {\n                          \"key1\": \"{{#[開始ノードID].[変数名]#}}\",\n  \
-    \                        \"key2\": \"値2\"\n                        }\n       \
-    \         headers: Content-Type:application/json\n                method: post\n\
-    \                url: [APIエンドポイントURL]\n                timeout:\n            \
-    \      max_connect_timeout: 0\n                  max_read_timeout: 0\n       \
-    \           max_write_timeout: 0\n                title: HTTPリクエスト\n         \
-    \       variables: []\n\n\n            - id: [JSONパースノードID]\n              data:\n\
-    \                type: tool\n                desc: ''\n                provider_id:\
-    \ json_process\n                provider_name: json_process\n                provider_type:\
-    \ builtin\n                selected: false\n                title: JSON Parse\n\
-    \                tool_configurations:\n                  ensure_ascii: 1\n   \
-    \             tool_label: JSON Parse\n                tool_name: parse\n     \
-    \           tool_parameters:\n                  content:\n                   \
-    \ type: mixed\n                    value: '{{#[入力ノードID].[変数名]#}}'\n          \
-    \        json_filter:\n                    type: mixed\n                    value:\
-    \ [抽出したいJSONキー]\n\n\n            - id: [質問分類器ノードID]\n              data:\n   \
-    \             type: question-classifier\n                title: 質問分類器\n      \
-    \          model:\n                  provider: openai\n                  name:\
-    \ gpt-4o\n                  mode: chat\n                  completion_params:\n\
+    \n\n      17. YouTubeトランスクリプトノード\n          ユースケース:\n          - YouTubeビデオの字幕取得\n\
+    \          - 音声コンテンツのテキスト化\n          - 多言語コンテンツの翻訳支援\n          - 動画内容の分析・要約\n\
+    \n\n          構造:\n          - id: ユニークなID（必須）\n          - data:\n          \
+    \    type: tool（固定）\n              title: Free YouTube Transcript API\n      \
+    \        provider_name: transcript（固定）\n              provider_id: transcript（固定）\n\
+    \              provider_type: builtin（固定）\n              tool_label: Free YouTube\
+    \ Transcript API\n              tool_name: free_youtube_transcript（固定）\n     \
+    \         tool_configurations:\n                cookies: null\n              \
+    \  format: text（固定）\n                language: ja  # 言語コード\n                preserve_formatting:\
+    \ 0  # フォーマット保持\n                proxy: null\n              tool_parameters:\n\
+    \                video_id:\n                  type: mixed（固定）\n              \
+    \    value: YouTubeビデオID or 変数参照\n              outputs:\n                text:\
+    \  # 字幕テキストの出力変数\n                  type: string\n\n\n          特記事項:\n      \
+    \    - video_idは以下の形式で指定可能:\n            - 直接指定: 'XLzul_7GPs4'\n            -\
+    \ 変数参照: '{{#[入力ノードID].[変数名]#}}'\n          - language設定:\n            - ja: 日本語\n\
+    \            - en: 英語\n          - preserve_formatting:\n            - 0: フォーマット除去（推奨）\n\
+    \            - 1: 原文フォーマット保持\n          - 出力変数:\n            - text: 取得した字幕テキスト（string型）\n\
+    \n\n      18. JinaReaderノード\n          ユースケース:\n          - ウェブページのテキスト抽出\n  \
+    \        - コンテンツスクレイピング\n          - ウェブ記事の要約\n          - 画像・リンクの収集\n\n\n   \
+    \       構造:\n          - id: ユニークなID（必須）\n          - type: tool（固定）\n       \
+    \   - data:\n              title: ノードのタイトル（必須）\n              provider_name: jina（固定）\n\
+    \              provider_id: jina（固定）\n              provider_type: builtin（固定）\n\
+    \              tool_label: JinaReader（固定）\n              tool_name: jina_reader（固定）\n\
+    \              tool_configurations:\n                gather_all_images_at_the_end:\
+    \ 0/1  # 画像収集\n                gather_all_links_at_the_end: 0/1   # リンク収集\n  \
+    \              image_caption: 0/1                 # 画像キャプション\n               \
+    \ no_cache: 0/1                      # キャッシュ設定\n                proxy_server:\
+    \ プロキシURL          # プロキシ設定\n                summary: 0/1                    \
+    \   # 要約機能\n                target_selector: CSSセレクター     # 特定要素の抽出\n        \
+    \        wait_for_selector: CSSセレクター   # 待機要素\n              tool_parameters:\n\
+    \                url:\n                  type: mixed（固定）\n                  value:\
+    \ URL文字列または変数参照\n              outputs:\n                text:\n             \
+    \     type: string\n\n\n          特記事項:\n          - URL入力:\n            - 直接指定:\
+    \ 'https://example.com'\n            - 変数参照: '{{#[入力ノードID].[変数名]#}}'\n       \
+    \   \n          - 設定オプション:\n            - gather_all_images_at_the_end: 画像の一括収集\n\
+    \            - gather_all_links_at_the_end: リンクの一括収集\n            - image_caption:\
+    \ 画像キャプションの取得\n            - summary: コンテンツの自動要約\n            - target_selector:\
+    \ 特定のDOM要素の抽出\n          \n          - プロキシ設定:\n            - アクセス制限のあるサイトへの対応\n\
+    \            - 地域制限の回避\n            - 負荷分散\n\n\n          - キャッシュ制御:\n       \
+    \     - no_cache: 1でキャッシュ無効化\n            - 常に最新コンテンツを取得\n\n\n      19. TavilySearchノード\n\
+    \          ユースケース:\n          - ウェブ検索の実行\n          - 情報収集\n          - コンテンツ調査\n\
+    \          - ドメイン指定検索\n\n\n          構造:\n          - id: ユニークなID（必須）\n      \
+    \    - type: tool（固定）\n          - data:\n              title: ノードのタイトル（必須）\n\
+    \              provider_name: tavily（固定）\n              provider_id: tavily（固定）\n\
+    \              provider_type: builtin（固定）\n              tool_label: TavilySearch（固定）\n\
+    \              tool_name: tavily_search（固定）\n              tool_configurations:\n\
+    \                exclude_domains: 除外ドメインリスト    # オプション\n                include_domains:\
+    \ 含めるドメインリスト  # オプション\n                include_answer: true/false            #\
+    \ 回答含める\n                include_images: true/false            # 画像含める\n     \
+    \           include_raw_content: true/false       # 生コンテンツ\n                max_results:\
+    \ 検索結果数（1-10）       # 必須\n                search_depth: basic/advanced       \
+    \   # 検索深度\n              tool_parameters:\n                query:\n         \
+    \         type: mixed（固定）\n                  value: 検索クエリまたは変数参照\n\n\n       \
+    \   特記事項:\n          - 検索クエリ:\n            - 直接指定: '検索したいキーワード'\n            -\
+    \ 変数参照: '{{#[入力ノードID].[変数名]#}}'\n          \n          - 検索深度:\n            -\
+    \ basic: 基本的な検索（高速）\n            - advanced: 詳細な検索（より多くの結果）\n          \n    \
+    \      - ドメイン制御:\n            - exclude_domains: 検索から除外するドメイン\n            - include_domains:\
+    \ 検索対象とするドメイン\n          \n          - 結果制御:\n            - max_results: 取得する検索結果の数\n\
+    \            - include_answer: 関連する回答の取得\n            - include_images: 関連画像の取得\n\
+    \            - include_raw_content: 未加工コンテンツ\n\n\n    output_format: |\n     \
+    \ 生成されるYAMLファイルは以下の形式に従ってください：\n      ```yaml\n      app:\n        mode: workflow\n\
+    \        name: [ワークフロー名]\n        version: 0.1.3\n\n\n      workflow:\n      \
+    \  graph:\n          edges:\n            # IF/ELSE分岐のエッジ例\n            - source:\
+    \ [IF/ELSEノードID]\n              target: [ターゲットノードID]\n              data:\n  \
+    \              sourceType: if-else\n                targetType: [ターゲットノードタイプ]\n\
+    \              sourceHandle: 'true'  # IF条件成立時\n            - source: [IF/ELSEノードID]\n\
+    \              target: [別のターゲットノードID]\n              data:\n                sourceType:\
+    \ if-else\n                targetType: [ターゲットノードタイプ]\n              sourceHandle:\
+    \ 'false'  # ELSE条件時\n\n\n          nodes:\n            - id: [開始ノードID]\n    \
+    \          data:\n                type: start\n                title: 開始\n   \
+    \             variables:\n                  # ファイル入力の例\n                  - type:\
+    \ file\n                    variable: input_document\n                    label:\
+    \ ドキュメント\n                    required: true\n                    max_length:\
+    \ 48\n                    allowed_file_types:\n                      - document\n\
+    \                    allowed_file_upload_methods:\n                      - local_file\n\
+    \                      - remote_url\n\n\n                  # その他の入力タイプ\n     \
+    \             - type: text-input\n                    variable: [変数名]\n      \
+    \              type: string/number\n                    label: [入力フィールドのラベル]\n\
+    \                    required: true\n                    max_length: [最大文字数]\n\
+    \n\n            - id: [LLMノードID]\n              data:\n                type: llm\n\
+    \                title: LLM\n                model:\n                  provider:\
+    \ openai\n                  name: gpt-4o\n                  mode: chat\n     \
+    \             completion_params:\n                    temperature: 0.7\n     \
+    \           prompt_template:\n                  - id: [プロンプトID]\n            \
+    \        role: system\n                    text: '[プロンプトテキスト]'\n             \
+    \   context:\n                  enabled: true\n                  variable_selector:\n\
+    \                    - [開始ノードID]\n                    - [変数名]\n              \
+    \  vision:\n                  enabled: false\n            - id: [終了ノードID]\n  \
+    \            data:\n                type: end\n                title: 終了\n   \
+    \             outputs:\n                  - value_selector:\n                \
+    \      - [開始ノードID]\n                      - [変数名]\n                    variable:\
+    \ inputData\n                  - value_selector:\n                      - [LLMノードID]\n\
+    \                      - text\n                    variable: generatedText\n\n\
+    \n            - id: [HTTPリクエストノードID]\n              data:\n                type:\
+    \ http-request\n                authorization:\n                  config: null\n\
+    \                  type: no-auth  # または必要な認証タイプ\n                body:\n     \
+    \             type: json\n                  data:\n                    - id: [キーバリューID]\n\
+    \                      key: ''\n                      type: text\n           \
+    \           value: |\n                        {\n                          \"\
+    key1\": \"{{#[開始ノードID].[変数名]#}}\",\n                          \"key2\": \"値2\"\
+    \n                        }\n                headers: Content-Type:application/json\n\
+    \                method: post\n                url: [APIエンドポイントURL]\n        \
+    \        timeout:\n                  max_connect_timeout: 0\n                \
+    \  max_read_timeout: 0\n                  max_write_timeout: 0\n             \
+    \   title: HTTPリクエスト\n                variables: []\n\n\n            - id: [JSONパースノードID]\n\
+    \              data:\n                type: tool\n                desc: ''\n \
+    \               provider_id: json_process\n                provider_name: json_process\n\
+    \                provider_type: builtin\n                selected: false\n   \
+    \             title: JSON Parse\n                tool_configurations:\n      \
+    \            ensure_ascii: 1\n                tool_label: JSON Parse\n       \
+    \         tool_name: parse\n                tool_parameters:\n               \
+    \   content:\n                    type: mixed\n                    value: '{{#[入力ノードID].[変数名]#}}'\n\
+    \                  json_filter:\n                    type: mixed\n           \
+    \         value: [抽出したいJSONキー]\n\n\n            - id: [質問分類器ノードID]\n         \
+    \     data:\n                type: question-classifier\n                title:\
+    \ 質問分類器\n                model:\n                  provider: openai\n        \
+    \          name: gpt-4o\n                  mode: chat\n                  completion_params:\n\
     \                    temperature: 0.7\n                query_variable_selector:\n\
     \                  - [入力ノードID]\n                  - [変数名]\n                classes:\n\
     \                  - id: '1'\n                    name: [分類名1]\n             \
@@ -544,7 +638,43 @@ model_config:
     \        [プロンプト文字列]\n                memory:\n                  role_prefix:\n\
     \                    user: [ユーザープレフィックス]\n                    assistant: [アシスタントプレフィックス]\n\
     \                vision:\n                  enabled: false\n                 \
-    \ configs: {}\n      ```"
+    \ configs: {}\n            - id: [YouTubeトランスクリプトノードID]\n              data:\n\
+    \                type: tool\n                title: Free YouTube Transcript API\n\
+    \                provider_name: transcript\n                provider_id: transcript\n\
+    \                provider_type: builtin\n                tool_label: Free YouTube\
+    \ Transcript API\n                tool_name: free_youtube_transcript\n       \
+    \         tool_configurations:\n                  cookies: null\n            \
+    \      format: text\n                  language: ja\n                  preserve_formatting:\
+    \ 0\n                  proxy: null\n                tool_parameters:\n       \
+    \           video_id:\n                    type: mixed\n                    value:\
+    \ '{{#[入力ノードID].[変数名]#}}'\n                outputs:\n                  text:\n\
+    \                    type: string\n            - id: [JinaReaderノードID]\n     \
+    \         data:\n                type: tool\n                title: JinaReader\n\
+    \                provider_name: jina\n                provider_id: jina\n    \
+    \            provider_type: builtin\n                tool_label: JinaReader\n\
+    \                tool_name: jina_reader\n                tool_configurations:\n\
+    \                  gather_all_images_at_the_end: 0  # 画像収集設定\n               \
+    \   gather_all_links_at_the_end: 0   # リンク収集設定\n                  image_caption:\
+    \ 0                 # 画像キャプション設定\n                  no_cache: 0              \
+    \        # キャッシュ無効化\n                  proxy_server: null               # プロキシサーバー設定\n\
+    \                  summary: 0                       # 要約機能\n                 \
+    \ target_selector: null            # ターゲット要素セレクター\n                  wait_for_selector:\
+    \ null          # 待機要素セレクター\n                tool_parameters:\n              \
+    \    url:\n                    type: mixed\n                    value: '{{#[入力ノードID].[変数名]#}}'\
+    \  # URL入力\n                outputs:\n                  text:\n              \
+    \      type: string\n            - id: [TavilySearchノードID]\n              data:\n\
+    \                type: tool\n                title: TavilySearch\n           \
+    \     provider_name: tavily\n                provider_id: tavily\n           \
+    \     provider_type: builtin\n                tool_label: TavilySearch\n     \
+    \           tool_name: tavily_search\n                tool_configurations:\n \
+    \                 exclude_domains: null      # 除外ドメイン\n                  include_domains:\
+    \ null      # 含めるドメイン\n                  include_answer: null       # 回答を含める\n\
+    \                  include_images: null       # 画像を含める\n                  include_raw_content:\
+    \ null  # 生コンテンツを含める\n                  max_results: 3             # 最大結果数\n \
+    \                 search_depth: basic        # 検索深度\n                tool_parameters:\n\
+    \                  query:\n                    type: mixed\n                 \
+    \   value: '{{#[入力ノードID].[変数名]#}}'\n                outputs:\n               \
+    \   text:\n                    type: string\n      ```"
   prompt_type: simple
   retriever_resource:
     enabled: true

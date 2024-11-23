@@ -86,6 +86,9 @@ example/adoviser_bot.yml
 - Template Transformノード：テンプレートベースの文字列生成
 - Answerノード：応答出力の制御
 - Parameter Extractorノード：テキストからのパラメータ抽出
+- YouTubeトランスクリプトノード：YouTube動画の字幕取得
+- JinaReaderノード：ウェブページのコンテンツ抽出
+- TavilySearchノード：ウェブ検索の実行
 
 ## ワークフロー例
 
@@ -148,6 +151,27 @@ example/adoviser_bot.yml
 開始 → Parameter Extractor → Template Transform → Answer → 終了
 ```
 
+### YouTubeトランスクリプトフロー
+```yaml
+開始 → YouTubeトランスクリプト → LLM → 終了
+```
+
+### ウェブコンテンツ処理フロー
+```yaml
+開始 → JinaReader → LLM → 終了
+```
+
+### ウェブ検索フロー
+```yaml
+開始 → TavilySearch → LLM → 終了
+```
+
+### 複合メディア処理フロー
+```yaml
+開始 → YouTubeトランスクリプト → Template Transform → LLM → 終了
+    → JinaReader → ↗
+```
+
 ## 制限事項
 
 - OpenAIのgpt-4oモデルのみサポート(変更は、Difyの画面上でモデル設定して下さい。)
@@ -175,6 +199,18 @@ example/adoviser_bot.yml
   - 変数代入ノード
   - リスト処理
   - ツールノード全般
+- YouTubeトランスクリプトノードの制約：
+  - 公開動画のみ対応
+  - 字幕が存在する動画のみ対応
+  - 指定言語の字幕が必要
+- JinaReaderノードの制約：
+  - アクセス可能なウェブページのみ対応
+  - JavaScript動的コンテンツは完全な取得が困難
+  - プロキシ設定が必要な場合あり
+- TavilySearchノードの制約：
+  - 検索結果数に制限あり（最大10件）
+  - 一部のドメインでアクセス制限の可能性
+  - 検索深度による処理時間の違いに注意
 
 ## ライセンス
 
