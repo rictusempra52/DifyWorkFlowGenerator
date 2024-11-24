@@ -62,6 +62,12 @@ prompt:
               sourceType: if-else
               targetType: [ターゲットノードタイプ]
             sourceHandle: 'false'  # ELSE条件時
+          - source: [ツールノードID]
+            target: [ターゲットノードID]
+            data:
+              sourceType: tool
+              targetType: [ターゲットノードタイプ]
+            sourceHandle: 'output'  # ツールノードの出力ハンドル
 
         nodes:
           start_node:

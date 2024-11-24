@@ -68,7 +68,7 @@ class WorkflowGenerator:
                 回答:""".strip()
             )
 
-        chain = prompt | self.llm.with_config({"max_tokens": 4000}) | StrOutputParser()
+        chain = prompt | self.llm.with_config({"max_tokens": 8192}) | StrOutputParser()
         answer = self._get_complete_answer(chain, role, role_details, query, state.judgement_reason)
         
         logging.info("workflow_generator_node: END")
