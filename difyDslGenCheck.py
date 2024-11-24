@@ -26,6 +26,7 @@ class State(BaseModel):
     )
     current_judge: bool = Field(default=False, description="品質チェックの結果")
     judgement_reason: str = Field(default="", description="品質チェックの判定理由")
+    operator_approved: bool = Field(default=False, description="オペレータによる承認状態")
 
 class Judgement(BaseModel):
     reason: str = Field(default="", description="判定理由")
@@ -117,12 +118,27 @@ class WorkflowGenerator:
             "current_judge": result.judge,
             "judgement_reason": result.reason
         }
+def ask_operator(state: State) -> dict[str, Any]:
+    logging.info("オペレータに確認中...")
+    print(f"\n警告: 以下の問題が検出されました：\n{state.judgement_reason}")
+    print("\n生成されたワークフロー：")
+    print(state.messages[-1])
+    
+    while True:
+        response = input("\nこのワークフローを再作成しますか？ (y/n): ").lower()
+        if response == 'y':
+            return {"operator_approved": False}
+        elif response == 'n':
+            return {"operator_approved": True}
+        else:
+            print("無効な入力です。y または n を入力してください。")
 
 def create_workflow_graph(generator: WorkflowGenerator) -> StateGraph:
     workflow = StateGraph(State)
     
     workflow.add_node("workflow_generator", generator.generate_workflow)
     workflow.add_node("check", generator.check_workflow)
+    workflow.add_node("ask_operator", ask_operator)
     
     workflow.set_entry_point("workflow_generator")
     workflow.add_edge("workflow_generator", "check")
@@ -130,10 +146,17 @@ def create_workflow_graph(generator: WorkflowGenerator) -> StateGraph:
     workflow.add_conditional_edges(
         "check",
         lambda state: state.current_judge,
+        {True: END, False: "ask_operator"}
+    )
+
+    workflow.add_conditional_edges(
+        "ask_operator",
+        lambda state: state.operator_approved,
         {True: END, False: "workflow_generator"}
     )
-    
+
     return workflow.compile()
+
 
 def main():
     setup_logging()
