@@ -9,6 +9,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langgraph.graph import StateGraph, END
 import yaml
 import logging
+import re
 
 # ロギング設定
 def setup_logging():
@@ -50,24 +51,14 @@ class WorkflowGenerator:
         # 前回のチェックで問題があった場合、その理由を含めたプロンプトを作成
         if state.judgement_reason:
             prompt = ChatPromptTemplate.from_template(
-                """プロンプト:{role_details}を元に、ワークフローを生成して下さい。
-                前回の生成で以下の問題が検出されました：
-                {judgement_reason}
-                
-                この問題を修正したワークフローを生成してください。
-                出力はYAML形式です。YAML以外は出力しないで下さい。
-                
-                質問: {query}
-                回答:""".strip()
+                """{role_details}{query}
+                前回の生成で以下の問題が検出されました、修正して下さい：
+                {judgement_reason}""".strip()
             )
         else:
-            # 初回生成時の既存のプロンプト
             prompt = ChatPromptTemplate.from_template(
-                """プロンプト:{role_details}を元に、ワークフローを生成して下さい。出力はYAML形式です。YAML以外は出力しないで下さい。
-                質問: {query}
-                回答:""".strip()
+                """{role_details}{query}""".strip()
             )
-
         chain = prompt | self.llm.with_config({"max_tokens": 8192}) | StrOutputParser()
         answer = self._get_complete_answer(chain, role, role_details, query, state.judgement_reason)
         
@@ -103,7 +94,7 @@ class WorkflowGenerator:
             また、その判断理由も説明して下さい。
             プロンプト:{prompt_data}
             回答: {answer}
-            """.strip()
+            """
         )
 
         chain = prompt | self.llm.with_structured_output(Judgement)
@@ -167,7 +158,7 @@ def main():
     1. 入力情報として、旅行先の地名を入力してもらう。
     2. インターネットを検索し、旅行先の観光情報やグルメ情報が書かれたURLを3つ入手する。
     3. 3つのURLから情報を取得する。3つは並列に処理すること。
-    4. 3つのURLから得た情報をLLに入力し、良好先の情報を整理して出力する。出力は、旅行情報雑誌に掲載できる文章に仕上げること。
+    4. 3つのURLから得た情報をLLに入力し、良好先の情報を整理して出力する。出力は、旅行情報雑誌に掲載できる文章に仕上げること
     """
     
     generator = WorkflowGenerator()
@@ -178,7 +169,12 @@ def main():
     
     logging.info(f"判定: {result['current_judge']}")
     logging.info(f"判定理由: {result['judgement_reason']}")
-    logging.info(f"結果: {result['messages'][-1]}")
+    # メッセージから```yaml と ``` で囲まれた部分を抽出
+    yaml_content = re.search(r'```yaml\n(.*?)```', result['messages'][-1], re.DOTALL)
+    if yaml_content:
+        logging.info(f"結果: {yaml_content.group(1)}")
+    else:
+        logging.error("YAMLコンテンツが見つかりませんでした。")
 
 if __name__ == "__main__":
     main()

@@ -1212,6 +1212,8 @@ prompt:
             - include_answer: 関連する回答の取得
             - include_images: 関連画像の取得
             - include_raw_content: 未加工コンテンツ
+          - 次のノードへの接続:
+            - 検索結果からURLを取得するには、パラメータ抽出ノードを使用
 
     output_format: |
       生成されるYAMLファイルは以下の形式に従ってください：
