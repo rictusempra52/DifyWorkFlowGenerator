@@ -212,6 +212,35 @@ example/adoviser_bot.yml
   - 一部のドメインでアクセス制限の可能性
   - 検索深度による処理時間の違いに注意
 
+## difyDslGenCheck.pyについて
+### 機能
+- ワークフローの概要を元に、DSLファイルを生成する。
+- 生成したDSLファイルの構造が正しいかチェックする。
+- チェック結果を元に、DSLファイルを修正する。
+
+### 使用方法
+1. difyDslGenCheck.pyに生成したいワークフローの概要を記述して下さい。
+
+```python
+    wanted_workflow = """
+    プロンプト：
+    目的：旅行コンシェルジェのように旅行先の目的地の情報を調査するためのツール
+    1. 入力情報として、旅行先の地名を入力してもらう。
+    2. インターネットを検索し、旅行先の観光情報やグルメ情報が書かれたURLを3つ入手する。
+    3. 3つのURLから情報を取得する。3つは並列に処理すること。
+    4. 3つのURLから得た情報をLLに入力し、良好先の情報を整理して出力する。出力は、旅行情報雑誌に掲載できる文章に仕上げること。
+    """
+```
+2. スクリプトを実行して下さい。
+```bash
+export ANTHROPIC_API_KEY="your_anthropic_api_key"
+python -m venv dify_env
+source dify_env/bin/activate
+pip install -r requirements.txt
+python difyDslGenCheck.py
+```
+
+
 ## ライセンス
 
 MITライセンス
