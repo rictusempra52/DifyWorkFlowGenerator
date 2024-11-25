@@ -153,12 +153,10 @@ def main():
     setup_logging()
     
     wanted_workflow = """
-    プロンプト：
-    目的：旅行コンシェルジェのように旅行先の目的地の情報を調査するためのツール
-    1. 入力情報として、旅行先の地名を入力してもらう。
-    2. インターネットを検索し、旅行先の観光情報やグルメ情報が書かれたURLを3つ入手する。
-    3. 3つのURLから情報を取得する。3つは並列に処理すること。
-    4. 3つのURLから得た情報をLLに入力し、良好先の情報を整理して出力する。出力は、旅行情報雑誌に掲載できる文章に仕上げること
+    目的：料理のレシピを調べて記事にする
+    1.料理のレシピをインターネットで調べて、3つのURLを取得する
+    2.3つのURLから情報を取得する
+    3.3つのURLから得た情報をLLMに入力し、料理のレシピを整理して出力する
     """
     
     generator = WorkflowGenerator()
@@ -172,7 +170,7 @@ def main():
     # メッセージから```yaml と ``` で囲まれた部分を抽出
     yaml_content = re.search(r'```yaml\n(.*?)```', result['messages'][-1], re.DOTALL)
     if yaml_content:
-        logging.info(f"結果: {yaml_content.group(1)}")
+        logging.info(f"結果: \n {yaml_content.group(1)}")
     else:
         logging.error("YAMLコンテンツが見つかりませんでした。")
 
