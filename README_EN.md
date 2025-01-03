@@ -238,7 +238,7 @@ export ANTHROPIC_API_KEY="your_anthropic_api_key"
 python -m venv dify_env
 source dify_env/bin/activate
 pip install -r requirements.txt
-python difyDslGenCheck.py
+python difyDslGenCheck_en.py
 ```
 
 ## License
