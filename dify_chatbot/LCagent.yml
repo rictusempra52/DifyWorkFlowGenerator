@@ -1,0 +1,121 @@
+app:
+  mode: workflow
+  name: 分譲マンション管理AIエージェント
+  version: 0.1.3
+
+workflow:
+  graph:
+    edges:
+      - source: 1700000000001 # 開始ノードID
+        target: 1700000000002 # LLMノードID
+        data:
+          sourceType: start
+          targetType: llm
+      - source: 1700000000002 # LLMノードID
+        target: 1700000000003 # HTTPリクエストノードID
+        data:
+          sourceType: llm
+          targetType: http-request
+      - source: 1700000000003 # HTTPリクエストノードID
+        target: 1700000000004 # 終了ノードID
+        data:
+          sourceType: http-request
+          targetType: end
+    nodes:
+      - id: 1700000000001
+        data:
+          type: start
+          title: 開始
+          variables:
+            - type: text-input
+              variable: mansion_name
+              label: マンション名
+              required: true
+              max_length: 100
+            - type: paragraph
+              variable: task_description
+              label: "タスク内容 (例: 年間事業計画書の作成、修繕計画の策定)"
+              required: true
+              max_length: 1000
+
+      - id: 1700000000002
+        data:
+          type: llm
+          title: タスク内容ドラフト生成
+          model:
+            provider: openai
+            name: gpt-4o
+            mode: chat
+            completion_params:
+              temperature: 0.7
+          prompt_template:
+            - id: 'prompt_plan_draft'
+              role: system
+              text: 'あなたは分譲マンション管理担当者向けのAIエージェントです。入力された「マンション名」と「タスク内容」を元に、そのタスクを遂行するための詳細な計画書や必要な情報の骨子を生成してください。この出力はWord/Excelファイル生成のためのデータとして使用されることを想定していますので、構造化された内容を提案してください。例えば、セクションタイトルと箇条書き、またはテーブル形式（Markdown）などで記述してください。
+
+                ---
+                ## マンション名: {{#1700000000001.mansion_name#}}
+                ## タスク内容: {{#1700000000001.task_description#}}
+
+                ---
+                [ここに計画書/タスク内容のドラフトを記述]'
+          context:
+            enabled: true
+            variable_selector:
+              - 1700000000001
+              - mansion_name
+              - 1700000000001
+              - task_description
+          vision:
+            enabled: false
+
+      - id: 1700000000003
+        data:
+          type: http-request
+          title: 外部ファイル生成API連携
+          authorization:
+            config: null
+            type: no-auth # 必要に応じて basic / bearer に変更し、configを設定
+          body:
+            type: json
+            data:
+              - id: 'http_body_data_1'
+                key: ''
+                type: text
+                value: |
+                  {
+                    "mansionName": "{{#1700000000001.mansion_name#}}",
+                    "taskDescription": "{{#1700000000001.task_description#}}",
+                    "documentContent": "{{#1700000000002.text#}}",
+                    "outputFormat": "docx" # または xlsx など、APIが対応する形式
+                  }
+          headers: Content-Type:application/json
+          method: post
+          url: https://your-document-generation-api.com/generate-document # ここを実際の外部APIのエンドポイントURLに置き換えてください
+          timeout:
+            max_connect_timeout: 0
+            max_read_timeout: 0
+            max_write_timeout: 0
+          variables: []
+
+      - id: 1700000000004
+        data:
+          type: end
+          title: 終了
+          outputs:
+            - value_selector:
+                - 1700000000001
+                - mansion_name
+              variable: input_mansion_name
+            - value_selector:
+                - 1700000000001
+                - task_description
+              variable: input_task_description
+            - value_selector:
+                - 1700000000002
+                - text
+              variable: generated_plan_draft_text
+            - value_selector:
+                - 1700000000003
+                - body # HTTPリクエストのレスポンスボディ
+              variable: http_response_body
